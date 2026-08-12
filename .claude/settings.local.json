@@ -1,0 +1,20 @@
+{
+  "permissions": {
+    "allow": [
+      "Bash(command -v brew)",
+      "Bash(brew install *)",
+      "Bash(pdfinfo \"/Users/ignaciopedrosa/Downloads/Tesis analista de sistemas.pdf\")",
+      "Read(//Users/ignaciopedrosa/repos/**)",
+      "Bash(yarn create *)",
+      "Bash(corepack enable *)",
+      "Bash(corepack prepare *)",
+      "Bash(yarn -v)",
+      "Bash(yarn add *)",
+      "Bash(rm -f .pnp.cjs .pnp.loader.mjs)",
+      "Bash(yarn install *)",
+      "Bash(curl -s -o /dev/null -w \"%{http_code}\\\\n\" http://localhost:5173/)",
+      "Bash(curl -s http://localhost:5173/src/main.tsx -o /dev/null -w \"%{http_code}\\\\n\")",
+      "Bash(pkill -f \"vite\")"
+    ]
+  }
+}
