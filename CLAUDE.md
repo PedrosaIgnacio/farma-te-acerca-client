@@ -10,8 +10,10 @@ relocalización") submitted by store employees, and gives HR and store managers 
 them. It implements the functional analysis approved by the thesis director: three roles, each
 with one dedicated screen, sharing a common login/session layer.
 
-This repo currently contains **frontend only**, with all data mocked in `src/data/mockData.ts`.
-There is no backend integration yet — see "Known gaps / design decisions" below.
+This repo is the frontend only; it talks to `farma-te-acerca-api` (a sibling repo, run separately)
+over HTTP. `FRONTEND_INTEGRATION.md` in that repo is the source of truth for every endpoint shape —
+consult it before changing request/response handling. The handful of static domain constants that
+aren't fetched from the API (`Reason` options, status badge colors) live in `src/data/constants.ts`.
 
 ## Commands
 
@@ -23,7 +25,9 @@ yarn preview    # preview the production build locally
 yarn lint       # oxlint
 ```
 
-There is no test suite configured in this repo yet.
+There is no test suite configured in this repo yet. Running the app end-to-end requires the API
+(`yarn start:dev` in `farma-te-acerca-api/`) up at the URL in `VITE_API_BASE_URL` (`.env`, defaults
+to `http://localhost:3000`), with its `CORS_ORIGIN` allowing this app's dev-server origin.
 
 ## Language policy
 
@@ -58,18 +62,29 @@ Three roles, each mapped 1:1 to a route and a screen:
 
 `RequestStatus` values (`Activa`, `En curso`, `Cancelada`, `Finalizada` — kept in Spanish per the
 language policy above, since they're rendered directly in the UI) and their badge colors are
-defined once in `src/data/mockData.ts` (`STATUS_STYLES`) and consumed by
-`components/shared/StatusBadge.tsx` — add new states there, not inline in pages.
+defined once in `src/data/constants.ts` (`STATUS_STYLES`) and consumed by
+`components/shared/StatusBadge.tsx` — add new states there, not inline in pages. The status strings
+themselves come back from the API pre-translated; nothing on the frontend maps them.
 
 ## Architecture
 
-**Auth/session** (`src/context/AuthContext.tsx`): a single `Session { user, role }` held in
-React context and mirrored to `sessionStorage` (key `farma-te-acerca:session`) so a page refresh
-mid-demo doesn't drop the user back to `/login`. Login is fully mocked: any username/legajo with
-password `demo` succeeds; the role is chosen via a selector on the login screen (stands in for
-what a real backend would resolve from the authenticated user). There is no real password
-validation, lockout persistence, or SSO — the login screen only simulates the attempt-counter and
-Microsoft 365 button described in the functional spec.
+**Auth/session** (`src/context/AuthContext.tsx`): a `Session { user, role, accessToken }` held in
+React context and mirrored to `sessionStorage` (key `farma-te-acerca:session`, read/written via
+`src/lib/session.ts` so the plain-function API client can reach it without importing React context)
+so a page refresh mid-demo doesn't drop the user back to `/login`. `login(legajo, password)` is
+async and calls `POST /auth/login`; the role comes back from the server, not from a UI selector.
+Password lockout (`Profile.failedAttempts`) and reset codes are owned by the API — the frontend
+only surfaces whatever `message` a 401/400 body contains. The "Iniciar sesión con Microsoft 365"
+button is still a stub (real Azure AD SSO needs Farmacity's tenant credentials, not available yet).
+There is no refresh-token flow: `accessToken` is good for `expiresIn` (1h), and `src/lib/api.ts`
+bounces to `/login` on the next 401 once it expires — enough for a thesis demo session.
+
+**API client** (`src/lib/api.ts`): `apiFetch`/`apiJson`/`apiBlob` inject `Authorization: Bearer
+<accessToken>` (via `src/lib/session.ts`) and `VITE_API_BASE_URL` (`.env`) on every call. A 401
+while a session exists is treated as an expired/invalid token — the session is cleared and the
+browser is redirected to `/login`; a 401 with no session (e.g. bad login credentials) is left for
+the caller to surface inline. `ApiError` carries `status` + the parsed JSON error `body`, so
+call sites needing more than the message (e.g. the 409 duplicate-request conflict) can read it.
 
 **Routing / RBAC** (`src/App.tsx` + `src/routes/guards.tsx`): route protection is composed from
 three small guards rather than one monolithic check:
@@ -97,21 +112,35 @@ Tailwind utilities. Brand green (`#1F7A4D`) and neutral `stone-*`/`sky-*`/`amber
 Tailwind palette colors are used directly in page components rather than added as theme tokens —
 follow that existing pattern for consistency rather than mixing in new arbitrary hex values.
 
-**Data layer** (`src/data/mockData.ts`, `src/types/index.ts`): all branches, requests, and nearby
-employees are static arrays with no fetching/caching layer. When a real backend is introduced,
-these are the shapes to replace/wrap; nothing else in the app currently assumes an async data
-source (no loading/error states exist yet).
+**Data layer** (`src/types/index.ts`): branches, requests, HC requests, nearby employees, and
+analytics all come from the API — nothing is fetched-and-cached beyond simple `useEffect`/`useState`
+per page (`useBranches` in `src/hooks/`, ad hoc fetches in `RequestsContext` and the HC/DT pages).
+Every fetch has a `loading`/`error` state; there's no shared query cache (React Query et al.) since
+the app's data needs are simple enough that one wasn't justified. `RequestsContext` still owns the
+collaborator's request history client-side (fetched on mount via `GET /requests`), but the
+duplicate-active-request check and id/date generation that used to live there moved server-side —
+`POST /requests` returns 409 on a conflict and the frontend just renders that response's `message`.
 
 ## Known gaps / design decisions
 
 - The original design artifact's `HumanCapitalPage` filtered requests with
   `s.currentBranch === branch || true`, which ignored the selected branch entirely. The
   functional spec calls for filtering by the branch employees are requesting to move **to**, so
-  `HCRequest` gained a `desiredBranch` field and the filter was corrected to use it. Keep this
-  in mind if reconciling against the original artifact — the field is new, not a port.
-- Report "download" (`HumanCapitalPage`) and "Contactar"/"Solicitar cobertura" actions
-  (`HumanCapitalPage`, `DTPage`) are non-functional buttons — no email or file-export
-  implementation exists yet.
+  `HCRequest` gained a `desiredBranch` field and the filter was corrected to use it (now via the
+  API's `GET /hc/requests?desiredBranchId=` query param). Keep this in mind if reconciling against
+  the original artifact — the field is new, not a port.
+- "Contactar" (`HumanCapitalPage`) and "Solicitar cobertura" (`DTPage`) are plain `mailto:` links
+  using the `email` field already on `HCRequest`/`NearbyEmployee` — there is no server-sent email,
+  per the case de uso's literal wording ("se abre un mail"). If a real templated server-sent email
+  is wanted later, that's new backend scope, not a frontend change.
+- The new solicitud's initial `status` is whatever `POST /requests` returns (`"Activa"` as of this
+  writing) — this had been unresolved with the thesis director at integration time; don't hardcode
+  UI copy that assumes a specific initial status without re-checking the API.
+- Azure/365 SSO ("Iniciar sesión con Microsoft 365") is a stub — it shows an inline message instead
+  of attempting OAuth, since exercising it needs Farmacity's real Azure AD tenant credentials.
+- `NewRequestPage`'s "sucursal actual" select has no pre-filled default: the API has no
+  "collaborator's home branch" endpoint (`GET /auth/me` doesn't return one), so unlike the old
+  mock (which hardcoded "Farmacity Palermo") the user must pick both branches explicitly.
 - `yarn lint` currently reports four `react-refresh/only-export-components` warnings (in
   `button.tsx`, `badge.tsx`, `AuthContext.tsx`, `RequestsContext.tsx`) from co-locating `cva`
   variants / the `useAuth`/`useRequests` hooks with their components. This is expected with the

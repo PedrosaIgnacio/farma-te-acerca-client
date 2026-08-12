@@ -1,5 +1,5 @@
 import { Badge } from "@/components/ui/badge";
-import { STATUS_STYLES } from "@/data/mockData";
+import { STATUS_STYLES } from "@/data/constants";
 import type { RequestStatus } from "@/types";
 
 export function StatusBadge({ status }: { status: RequestStatus }) {

@@ -7,6 +7,55 @@ export type RequestStatus = "Activa" | "En curso" | "Cancelada" | "Finalizada";
 export interface Session {
   user: string;
   role: Role;
+  accessToken: string;
+}
+
+export interface LoginResponse {
+  accessToken: string;
+  refreshToken: string;
+  expiresIn: number;
+  user: {
+    legajo: string;
+    fullName: string;
+    role: Role;
+    email: string;
+  };
+}
+
+export interface NewRequestInput {
+  currentBranchId: number;
+  desiredBranchId: number;
+  reason: Reason;
+  otherReason?: string;
+  description?: string;
+}
+
+export interface RequestConflictBody {
+  message: string;
+  existingRequestId: number;
+  existingStatus: RequestStatus;
+}
+
+export interface AnalyticsFilters {
+  region?: string;
+  zona?: string;
+  desiredBranchId?: number;
+  estado?: RequestStatus;
+  from?: string;
+  to?: string;
+}
+
+export interface AnalyticsKpis {
+  totalSolicitudes: number;
+  activas: number;
+  exitosas: number;
+  successRate: string;
+}
+
+export interface AnalyticsResponse {
+  kpis: AnalyticsKpis;
+  regionData: RegionData[];
+  statusData: StatusData[];
 }
 
 export interface Branch {

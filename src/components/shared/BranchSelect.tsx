@@ -1,7 +1,8 @@
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
-import { BRANCHES } from "@/data/mockData";
+import { useBranches } from "@/hooks/useBranches";
 
 interface BranchSelectProps {
+  /** Selected branch id, as a string (Radix Select values are strings). */
   value: string;
   onChange: (value: string) => void;
   placeholder?: string;
@@ -12,14 +13,16 @@ export function BranchSelect({
   onChange,
   placeholder = "Seleccioná una sucursal",
 }: BranchSelectProps) {
+  const { branches, loading } = useBranches();
+
   return (
     <Select value={value} onValueChange={onChange}>
       <SelectTrigger className="w-full">
-        <SelectValue placeholder={placeholder} />
+        <SelectValue placeholder={loading ? "Cargando sucursales..." : placeholder} />
       </SelectTrigger>
       <SelectContent>
-        {BRANCHES.map((b) => (
-          <SelectItem key={b.id} value={b.name}>
+        {branches.map((b) => (
+          <SelectItem key={b.id} value={String(b.id)}>
             {b.name} <span className="text-stone-400">— {b.region}</span>
           </SelectItem>
         ))}

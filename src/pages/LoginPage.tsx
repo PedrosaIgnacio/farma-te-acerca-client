@@ -7,12 +7,9 @@ import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { ROLE_HOME } from "@/config/navigation";
 import { useAuth } from "@/context/AuthContext";
-import type { Role } from "@/types";
-
-const MAX_ATTEMPTS = 5;
+import { ApiError } from "@/lib/api";
 
 export function LoginPage() {
   const { session, login } = useAuth();
@@ -20,37 +17,30 @@ export function LoginPage() {
 
   const [username, setUsername] = React.useState("");
   const [pass, setPass] = React.useState("");
-  const [attempts, setAttempts] = React.useState(0);
   const [error, setError] = React.useState("");
-  const [role, setRole] = React.useState<Role>("collaborator");
+  const [submitting, setSubmitting] = React.useState(false);
   const [forgotOpen, setForgotOpen] = React.useState(false);
 
   if (session) {
     return <Navigate to={ROLE_HOME[session.role]} replace />;
   }
 
-  const handleLogin = (user: string, selectedRole: Role) => {
-    login(user, selectedRole);
-    navigate(ROLE_HOME[selectedRole], { replace: true });
-  };
-
-  const handleSubmit = (e: React.FormEvent) => {
+  const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!username || !pass) {
       setError("Ingresá tu usuario y contraseña.");
       return;
     }
-    if (pass !== "demo") {
-      const next = attempts + 1;
-      setAttempts(next);
-      setError(
-        next >= MAX_ATTEMPTS
-          ? "Usuario bloqueado por intentos fallidos. Restablecé tu contraseña."
-          : "Usuario o contraseña incorrectos.",
-      );
-      return;
+    setError("");
+    setSubmitting(true);
+    try {
+      const next = await login(username, pass);
+      navigate(ROLE_HOME[next.role], { replace: true });
+    } catch (err) {
+      setError(err instanceof ApiError ? err.message : "No se pudo iniciar sesión.");
+    } finally {
+      setSubmitting(false);
     }
-    handleLogin(username, role);
   };
 
   return (
@@ -71,7 +61,7 @@ export function LoginPage() {
                 <Label htmlFor="username">Usuario o legajo</Label>
                 <Input
                   id="username"
-                  placeholder="Ej: 44210"
+                  placeholder="Ej: 10001"
                   value={username}
                   onChange={(e) => setUsername(e.target.value)}
                 />
@@ -85,22 +75,6 @@ export function LoginPage() {
                   value={pass}
                   onChange={(e) => setPass(e.target.value)}
                 />
-                <p className="text-xs text-stone-400">Pista demo: contraseña "demo"</p>
-              </div>
-
-              {/* Role selector for the demo — in production this would be resolved by the backend based on the authenticated employee ID/username */}
-              <div className="space-y-1.5">
-                <Label htmlFor="role">Rol (demo)</Label>
-                <Select value={role} onValueChange={(v) => setRole(v as Role)}>
-                  <SelectTrigger id="role">
-                    <SelectValue />
-                  </SelectTrigger>
-                  <SelectContent>
-                    <SelectItem value="collaborator">Colaborador de sucursal</SelectItem>
-                    <SelectItem value="hc">Capital Humano</SelectItem>
-                    <SelectItem value="dt">DT de sucursal</SelectItem>
-                  </SelectContent>
-                </Select>
               </div>
 
               {error && (
@@ -109,8 +83,12 @@ export function LoginPage() {
                 </p>
               )}
 
-              <Button type="submit" className="w-full bg-[#1F7A4D] hover:bg-[#19653F]">
-                Iniciar sesión
+              <Button
+                type="submit"
+                disabled={submitting}
+                className="w-full bg-[#1F7A4D] hover:bg-[#19653F]"
+              >
+                {submitting ? "Ingresando..." : "Iniciar sesión"}
               </Button>
 
               <div className="flex items-center gap-2 py-1">
@@ -123,7 +101,9 @@ export function LoginPage() {
                 type="button"
                 variant="outline"
                 className="w-full gap-2"
-                onClick={() => handleLogin("usuario.365@farmacity.com", role)}
+                onClick={() =>
+                  setError("Inicio de sesión con Microsoft 365 no disponible todavía.")
+                }
               >
                 <svg width="16" height="16" viewBox="0 0 23 23">
                   <path fill="#f35325" d="M1 1h10v10H1z" />

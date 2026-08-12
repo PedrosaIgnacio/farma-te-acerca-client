@@ -2,6 +2,7 @@ import * as React from "react";
 import { ChevronRight, Mail, MapPin, Search, Users } from "lucide-react";
 
 import { BranchSelect } from "@/components/shared/BranchSelect";
+import { EmptyState } from "@/components/shared/EmptyState";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
@@ -13,13 +14,33 @@ import {
   DialogHeader,
   DialogTitle,
 } from "@/components/ui/dialog";
-import { NEARBY_EMPLOYEES } from "@/data/mockData";
+import { ApiError, apiJson } from "@/lib/api";
 import type { NearbyEmployee } from "@/types";
 
 export function DTPage() {
-  const [branch, setBranch] = React.useState("");
+  const [branchId, setBranchId] = React.useState("");
   const [show, setShow] = React.useState(false);
+  const [employees, setEmployees] = React.useState<NearbyEmployee[]>([]);
+  const [loading, setLoading] = React.useState(false);
+  const [error, setError] = React.useState<string | null>(null);
   const [selected, setSelected] = React.useState<NearbyEmployee | null>(null);
+
+  const handleShow = async () => {
+    if (!branchId) return;
+    setShow(true);
+    setLoading(true);
+    setError(null);
+    try {
+      const data = await apiJson<NearbyEmployee[]>(`/dt/nearby-employees?branchId=${branchId}`);
+      setEmployees(data);
+    } catch (err) {
+      setError(
+        err instanceof ApiError ? err.message : "No se pudieron cargar los colaboradores cercanos.",
+      );
+    } finally {
+      setLoading(false);
+    }
+  };
 
   return (
     <div className="mx-auto max-w-4xl space-y-6 p-6">
@@ -32,20 +53,38 @@ export function DTPage() {
 
       <div className="flex flex-col gap-3 sm:flex-row">
         <div className="flex-1">
-          <BranchSelect value={branch} onChange={setBranch} />
+          <BranchSelect value={branchId} onChange={setBranchId} />
         </div>
         <Button
-          onClick={() => setShow(true)}
-          disabled={!branch}
+          onClick={handleShow}
+          disabled={!branchId || loading}
           className="gap-2 bg-[#1F7A4D] hover:bg-[#19653F]"
         >
           <Search className="h-4 w-4" /> Mostrar colaboradores cercanos
         </Button>
       </div>
 
-      {show && (
+      {show && loading && (
+        <p className="py-6 text-center text-sm text-stone-400">Buscando colaboradores cercanos...</p>
+      )}
+
+      {show && !loading && error && (
+        <p className="rounded-md border border-red-100 bg-red-50 px-3 py-2 text-sm text-red-600">
+          {error}
+        </p>
+      )}
+
+      {show && !loading && !error && employees.length === 0 && (
+        <EmptyState
+          icon={Users}
+          title="No hay colaboradores cercanos"
+          description="No se encontraron colaboradores disponibles cerca de la sucursal seleccionada."
+        />
+      )}
+
+      {show && !loading && !error && employees.length > 0 && (
         <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
-          {NEARBY_EMPLOYEES.map((e) => (
+          {employees.map((e) => (
             <Card
               key={e.id}
               className="cursor-pointer transition hover:border-[#1F7A4D]/40 hover:shadow-sm"
@@ -92,7 +131,12 @@ export function DTPage() {
                 </div>
               </div>
               <DialogFooter>
-                <Button className="w-full gap-2 bg-[#1F7A4D] hover:bg-[#19653F]">
+                <Button
+                  className="w-full gap-2 bg-[#1F7A4D] hover:bg-[#19653F]"
+                  onClick={() => {
+                    window.location.href = `mailto:${selected.email}`;
+                  }}
+                >
                   <Mail className="h-4 w-4" /> Solicitar cobertura
                 </Button>
               </DialogFooter>
