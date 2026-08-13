@@ -9,7 +9,7 @@ import { useRequests } from "@/context/RequestsContext";
 import type { RequestHistoryEntry } from "@/types";
 
 export function HistoryPage() {
-  const { history } = useRequests();
+  const { history, loading, error } = useRequests();
   const navigate = useNavigate();
   const location = useLocation();
   const confirmation =
@@ -47,7 +47,13 @@ export function HistoryPage() {
           <CardTitle className="text-base">Historial de solicitudes</CardTitle>
         </CardHeader>
         <CardContent className="space-y-2">
-          {history.length === 0 ? (
+          {loading ? (
+            <p className="py-6 text-center text-sm text-stone-400">Cargando historial...</p>
+          ) : error ? (
+            <p className="rounded-md border border-red-100 bg-red-50 px-3 py-2 text-sm text-red-600">
+              {error}
+            </p>
+          ) : history.length === 0 ? (
             <EmptyState
               icon={ClipboardList}
               title="Todavía no cargaste ninguna solicitud"

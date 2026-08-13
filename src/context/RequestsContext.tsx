@@ -1,42 +1,54 @@
 import * as React from "react";
 import { Outlet } from "react-router-dom";
 
-import { INITIAL_HISTORY } from "@/data/mockData";
-import type { RequestHistoryEntry } from "@/types";
+import { ApiError, apiJson } from "@/lib/api";
+import type { NewRequestInput, RequestHistoryEntry } from "@/types";
 
 interface RequestsContextValue {
   history: RequestHistoryEntry[];
-  hasExistingRequest: (branch: string) => RequestHistoryEntry | undefined;
-  addRequest: (branch: string) => RequestHistoryEntry;
+  loading: boolean;
+  error: string | null;
+  addRequest: (input: NewRequestInput) => Promise<RequestHistoryEntry>;
 }
 
 const RequestsContext = React.createContext<RequestsContextValue | null>(null);
 
 export function RequestsProvider() {
-  const [history, setHistory] = React.useState<RequestHistoryEntry[]>(INITIAL_HISTORY);
+  const [history, setHistory] = React.useState<RequestHistoryEntry[]>([]);
+  const [loading, setLoading] = React.useState(true);
+  const [error, setError] = React.useState<string | null>(null);
 
-  const hasExistingRequest = React.useCallback(
-    (branch: string) =>
-      history.find(
-        (h) => h.branch === branch && (h.status === "Activa" || h.status === "En curso"),
-      ),
-    [history],
-  );
-
-  const addRequest = React.useCallback((branch: string) => {
-    const newEntry: RequestHistoryEntry = {
-      id: 1000 + Math.floor(Math.random() * 500),
-      branch,
-      date: new Date().toLocaleDateString("es-AR"),
-      status: "En curso",
+  React.useEffect(() => {
+    let cancelled = false;
+    setLoading(true);
+    apiJson<RequestHistoryEntry[]>("/requests")
+      .then((data) => {
+        if (!cancelled) setHistory(data);
+      })
+      .catch((err) => {
+        if (!cancelled)
+          setError(err instanceof ApiError ? err.message : "No se pudo cargar el historial.");
+      })
+      .finally(() => {
+        if (!cancelled) setLoading(false);
+      });
+    return () => {
+      cancelled = true;
     };
-    setHistory((prev) => [newEntry, ...prev]);
-    return newEntry;
+  }, []);
+
+  const addRequest = React.useCallback(async (input: NewRequestInput) => {
+    const entry = await apiJson<RequestHistoryEntry>("/requests", {
+      method: "POST",
+      body: JSON.stringify(input),
+    });
+    setHistory((prev) => [entry, ...prev]);
+    return entry;
   }, []);
 
   const value = React.useMemo(
-    () => ({ history, hasExistingRequest, addRequest }),
-    [history, hasExistingRequest, addRequest],
+    () => ({ history, loading, error, addRequest }),
+    [history, loading, error, addRequest],
   );
 
   return (

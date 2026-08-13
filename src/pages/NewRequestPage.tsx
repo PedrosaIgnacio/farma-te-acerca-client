@@ -1,5 +1,5 @@
 import * as React from "react";
-import { ClipboardList, Send } from "lucide-react";
+import { AlertTriangle, ClipboardList, Send } from "lucide-react";
 import { useNavigate } from "react-router-dom";
 
 import { BranchSelect } from "@/components/shared/BranchSelect";
@@ -10,32 +10,48 @@ import { Label } from "@/components/ui/label";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Textarea } from "@/components/ui/textarea";
 import { useRequests } from "@/context/RequestsContext";
-import { REASONS } from "@/data/mockData";
-import type { Reason, RequestHistoryEntry } from "@/types";
+import { REASONS } from "@/data/constants";
+import { ApiError } from "@/lib/api";
+import type { Reason } from "@/types";
 
 export function NewRequestPage() {
   const navigate = useNavigate();
-  const { hasExistingRequest, addRequest } = useRequests();
+  const { addRequest } = useRequests();
 
-  const [currentBranch, setCurrentBranch] = React.useState("Farmacity Palermo");
+  const [currentBranch, setCurrentBranch] = React.useState("");
   const [desiredBranch, setDesiredBranch] = React.useState("");
   const [reason, setReason] = React.useState<Reason | "">("");
   const [otherReason, setOtherReason] = React.useState("");
   const [description, setDescription] = React.useState("");
-  const [conflict, setConflict] = React.useState<RequestHistoryEntry | null>(null);
+  const [conflict, setConflict] = React.useState<string | null>(null);
+  const [error, setError] = React.useState<string | null>(null);
+  const [submitting, setSubmitting] = React.useState(false);
 
-  const handleSubmit = (e: React.FormEvent) => {
+  const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    if (!desiredBranch || !reason) return;
+    if (!currentBranch || !desiredBranch || !reason) return;
 
-    const existing = hasExistingRequest(desiredBranch);
-    if (existing) {
-      setConflict(existing);
-      return;
+    setConflict(null);
+    setError(null);
+    setSubmitting(true);
+    try {
+      const newEntry = await addRequest({
+        currentBranchId: Number(currentBranch),
+        desiredBranchId: Number(desiredBranch),
+        reason,
+        otherReason: reason === "Otro" ? otherReason : undefined,
+        description: description || undefined,
+      });
+      navigate("/colaborador", { state: { confirmation: newEntry } });
+    } catch (err) {
+      if (err instanceof ApiError && err.status === 409) {
+        setConflict(err.message);
+      } else {
+        setError(err instanceof ApiError ? err.message : "No se pudo cargar la solicitud.");
+      }
+    } finally {
+      setSubmitting(false);
     }
-
-    const newEntry = addRequest(desiredBranch);
-    navigate("/colaborador", { state: { confirmation: newEntry } });
   };
 
   return (
@@ -51,10 +67,14 @@ export function NewRequestPage() {
       {conflict && (
         <div className="flex items-start gap-3 rounded-md border border-amber-200 bg-amber-50 px-4 py-3 text-sm text-amber-800">
           <ClipboardList className="mt-0.5 h-4 w-4 shrink-0" />
-          <div>
-            Ya tenés una solicitud <strong>{conflict.status.toLowerCase()}</strong> a esta sucursal
-            (N° {conflict.id}). No es posible duplicarla.
-          </div>
+          <div>{conflict}</div>
+        </div>
+      )}
+
+      {error && (
+        <div className="flex items-start gap-3 rounded-md border border-red-100 bg-red-50 px-4 py-3 text-sm text-red-600">
+          <AlertTriangle className="mt-0.5 h-4 w-4 shrink-0" />
+          <div>{error}</div>
         </div>
       )}
 
@@ -68,7 +88,7 @@ export function NewRequestPage() {
             <div className="grid gap-4 sm:grid-cols-2">
               <div className="space-y-1.5">
                 <Label>Sucursal actual</Label>
-                <BranchSelect value={currentBranch} onChange={setCurrentBranch} />
+                <BranchSelect value={currentBranch} onChange={setCurrentBranch} placeholder="Elegí tu sucursal" />
               </div>
               <div className="space-y-1.5">
                 <Label>Sucursal deseada</Label>
@@ -110,8 +130,8 @@ export function NewRequestPage() {
               <p className="text-right text-xs text-stone-400">{description.length}/240</p>
             </div>
 
-            <Button type="submit" className="gap-2 bg-[#1F7A4D] hover:bg-[#19653F]">
-              <Send className="h-4 w-4" /> Cargar solicitud
+            <Button type="submit" disabled={submitting} className="gap-2 bg-[#1F7A4D] hover:bg-[#19653F]">
+              <Send className="h-4 w-4" /> {submitting ? "Enviando..." : "Cargar solicitud"}
             </Button>
           </form>
         </CardContent>
