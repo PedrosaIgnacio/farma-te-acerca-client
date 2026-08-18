@@ -1,5 +1,13 @@
 import * as React from "react";
-import { BarChart3, ClipboardList, Download, Mail, MoreVertical, Search } from "lucide-react";
+import {
+  BarChart3,
+  CalendarRange,
+  ClipboardList,
+  Download,
+  Mail,
+  MoreVertical,
+  Search,
+} from "lucide-react";
 import {
   Bar,
   BarChart,
@@ -33,7 +41,9 @@ import {
   DropdownMenuItem,
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
+import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
+import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import {
   Sheet,
@@ -47,6 +57,63 @@ import { Textarea } from "@/components/ui/textarea";
 import { STATUSES } from "@/data/constants";
 import { ApiError, apiBlob, apiJson } from "@/lib/api";
 import type { AnalyticsResponse, HCRequest, RequestStatus } from "@/types";
+
+type PeriodOption = "hoy" | "ayer" | "7" | "15" | "30" | "otro";
+
+const PERIOD_OPTIONS: { value: PeriodOption; label: string }[] = [
+  { value: "hoy", label: "Hoy" },
+  { value: "ayer", label: "Ayer" },
+  { value: "7", label: "Últimos 7 días" },
+  { value: "15", label: "Últimos 15 días" },
+  { value: "30", label: "Últimos 30 días" },
+  { value: "otro", label: "Otro período" },
+];
+
+interface AnalyticsDateFilter {
+  from: string;
+  to: string;
+  periodLabel: string;
+}
+
+function toIsoDate(date: Date): string {
+  const y = date.getFullYear();
+  const m = String(date.getMonth() + 1).padStart(2, "0");
+  const d = String(date.getDate()).padStart(2, "0");
+  return `${y}-${m}-${d}`;
+}
+
+function computeDateRange(
+  period: PeriodOption,
+  customFrom: string,
+  customTo: string,
+): { from: string; to: string } | null {
+  const today = new Date();
+  today.setHours(0, 0, 0, 0);
+
+  switch (period) {
+    case "hoy": {
+      const d = toIsoDate(today);
+      return { from: d, to: d };
+    }
+    case "ayer": {
+      const yesterday = new Date(today);
+      yesterday.setDate(yesterday.getDate() - 1);
+      const d = toIsoDate(yesterday);
+      return { from: d, to: d };
+    }
+    case "7":
+    case "15":
+    case "30": {
+      const from = new Date(today);
+      from.setDate(from.getDate() - (Number(period) - 1));
+      return { from: toIsoDate(from), to: toIsoDate(today) };
+    }
+    case "otro": {
+      if (!customFrom || !customTo) return null;
+      return { from: customFrom, to: customTo };
+    }
+  }
+}
 
 export function HumanCapitalPage() {
   const [branchId, setBranchId] = React.useState("");
@@ -68,9 +135,26 @@ export function HumanCapitalPage() {
   const [exporting, setExporting] = React.useState(false);
   const [exportError, setExportError] = React.useState<string | null>(null);
 
+  const [filterOpen, setFilterOpen] = React.useState(false);
+  const [period, setPeriod] = React.useState<PeriodOption | null>(null);
+  const [customFrom, setCustomFrom] = React.useState("");
+  const [customTo, setCustomTo] = React.useState("");
+  const [dateFilter, setDateFilter] = React.useState<AnalyticsDateFilter | null>(null);
+
+  const dateFilterParams = React.useMemo(() => {
+    const params = new URLSearchParams();
+    if (dateFilter) {
+      params.set("from", dateFilter.from);
+      params.set("to", dateFilter.to);
+    }
+    return params.toString();
+  }, [dateFilter]);
+
   React.useEffect(() => {
     let cancelled = false;
-    apiJson<AnalyticsResponse>("/hc/analytics")
+    setAnalyticsLoading(true);
+    setAnalyticsError(null);
+    apiJson<AnalyticsResponse>(`/hc/analytics${dateFilterParams ? `?${dateFilterParams}` : ""}`)
       .then((data) => {
         if (!cancelled) setAnalytics(data);
       })
@@ -84,7 +168,7 @@ export function HumanCapitalPage() {
     return () => {
       cancelled = true;
     };
-  }, []);
+  }, [dateFilterParams]);
 
   const handleShow = async () => {
     if (!branchId) return;
@@ -107,7 +191,7 @@ export function HumanCapitalPage() {
     setExporting(true);
     setExportError(null);
     try {
-      const blob = await apiBlob("/hc/requests/export");
+      const blob = await apiBlob(`/hc/requests/export${dateFilterParams ? `?${dateFilterParams}` : ""}`);
       const url = URL.createObjectURL(blob);
       const a = document.createElement("a");
       a.href = url;
@@ -154,6 +238,23 @@ export function HumanCapitalPage() {
     } finally {
       setStatusUpdating(false);
     }
+  };
+
+  const handleApplyFilter = () => {
+    if (!period) return;
+    const range = computeDateRange(period, customFrom, customTo);
+    if (!range) return;
+    const periodLabel = PERIOD_OPTIONS.find((p) => p.value === period)!.label;
+    setDateFilter({ ...range, periodLabel });
+    setFilterOpen(false);
+  };
+
+  const handleClearFilter = () => {
+    setPeriod(null);
+    setCustomFrom("");
+    setCustomTo("");
+    setDateFilter(null);
+    setFilterOpen(false);
   };
 
   const kpis = analytics
@@ -279,6 +380,29 @@ export function HumanCapitalPage() {
             </p>
           )}
 
+          <div className="flex flex-wrap items-center justify-between gap-2">
+            <p className="text-sm text-stone-500">
+              {dateFilter ? (
+                <>
+                  Mostrando <span className="font-medium text-stone-700">{dateFilter.periodLabel}</span>{" "}
+                  ({dateFilter.from} a {dateFilter.to})
+                </>
+              ) : (
+                "Mostrando todos los períodos"
+              )}
+            </p>
+            <div className="flex items-center gap-2">
+              {dateFilter && (
+                <Button variant="ghost" size="sm" onClick={handleClearFilter}>
+                  Quitar filtro
+                </Button>
+              )}
+              <Button variant="outline" size="sm" className="gap-2" onClick={() => setFilterOpen(true)}>
+                <CalendarRange className="h-4 w-4" /> Filtrar por fecha
+              </Button>
+            </div>
+          </div>
+
           <div className="grid grid-cols-2 gap-3 sm:grid-cols-4">
             {analyticsLoading
               ? Array.from({ length: 4 }, (_, i) => (
@@ -392,6 +516,71 @@ export function HumanCapitalPage() {
               </Button>
             </>
           )}
+        </SheetContent>
+      </Sheet>
+
+      <Sheet open={filterOpen} onOpenChange={setFilterOpen}>
+        <SheetContent>
+          <SheetHeader>
+            <SheetTitle>Filtrar por fecha</SheetTitle>
+            <SheetDescription>
+              Elegí un período predefinido o un rango personalizado para filtrar la analítica.
+            </SheetDescription>
+          </SheetHeader>
+
+          <div className="mt-6 space-y-4">
+            <RadioGroup
+              value={period ?? undefined}
+              onValueChange={(v) => setPeriod(v as PeriodOption)}
+            >
+              {PERIOD_OPTIONS.map((opt) => (
+                <div key={opt.value} className="flex items-center gap-2">
+                  <RadioGroupItem value={opt.value} id={`period-${opt.value}`} />
+                  <Label htmlFor={`period-${opt.value}`} className="font-normal">
+                    {opt.label}
+                  </Label>
+                </div>
+              ))}
+            </RadioGroup>
+
+            {period === "otro" && (
+              <div className="grid grid-cols-2 gap-3 pt-2">
+                <div className="space-y-1.5">
+                  <Label htmlFor="fecha-desde">Fecha desde</Label>
+                  <Input
+                    id="fecha-desde"
+                    type="date"
+                    value={customFrom}
+                    max={customTo || undefined}
+                    onChange={(e) => setCustomFrom(e.target.value)}
+                  />
+                </div>
+                <div className="space-y-1.5">
+                  <Label htmlFor="fecha-hasta">Fecha hasta</Label>
+                  <Input
+                    id="fecha-hasta"
+                    type="date"
+                    value={customTo}
+                    min={customFrom || undefined}
+                    onChange={(e) => setCustomTo(e.target.value)}
+                  />
+                </div>
+              </div>
+            )}
+          </div>
+
+          <div className="mt-6 flex justify-end gap-2">
+            <Button variant="outline" onClick={handleClearFilter}>
+              Quitar filtro
+            </Button>
+            <Button
+              className="bg-[#1F7A4D] hover:bg-[#19653F]"
+              onClick={handleApplyFilter}
+              disabled={!period || (period === "otro" && (!customFrom || !customTo))}
+            >
+              Aplicar filtro
+            </Button>
+          </div>
         </SheetContent>
       </Sheet>
 
