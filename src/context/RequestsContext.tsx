@@ -10,6 +10,7 @@ interface RequestsContextValue {
   error: string | null;
   addRequest: (input: NewRequestInput) => Promise<RequestHistoryEntry>;
   currentBranchId: number | null;
+  currentBranch: string | null;
   currentBranchLoading: boolean;
 }
 
@@ -20,6 +21,7 @@ export function RequestsProvider() {
   const [loading, setLoading] = React.useState(true);
   const [error, setError] = React.useState<string | null>(null);
   const [currentBranchId, setCurrentBranchId] = React.useState<number | null>(null);
+  const [currentBranch, setCurrentBranch] = React.useState<string | null>(null);
   const [currentBranchLoading, setCurrentBranchLoading] = React.useState(true);
 
   React.useEffect(() => {
@@ -46,7 +48,10 @@ export function RequestsProvider() {
     setCurrentBranchLoading(true);
     apiJson<CurrentUserResponse>("/auth/me")
       .then((data) => {
-        if (!cancelled) setCurrentBranchId(data.currentBranchId);
+        if (!cancelled) {
+          setCurrentBranchId(data.currentBranchId);
+          setCurrentBranch(data.currentBranch);
+        }
       })
       .finally(() => {
         if (!cancelled) setCurrentBranchLoading(false);
@@ -66,8 +71,8 @@ export function RequestsProvider() {
   }, []);
 
   const value = React.useMemo(
-    () => ({ history, loading, error, addRequest, currentBranchId, currentBranchLoading }),
-    [history, loading, error, addRequest, currentBranchId, currentBranchLoading],
+    () => ({ history, loading, error, addRequest, currentBranchId, currentBranch, currentBranchLoading }),
+    [history, loading, error, addRequest, currentBranchId, currentBranch, currentBranchLoading],
   );
 
   return (

@@ -16,7 +16,7 @@ import type { Reason } from "@/types";
 
 export function NewRequestPage() {
   const navigate = useNavigate();
-  const { addRequest, currentBranchId, currentBranchLoading } = useRequests();
+  const { addRequest, currentBranchId, currentBranch, currentBranchLoading } = useRequests();
 
   const [desiredBranch, setDesiredBranch] = React.useState("");
   const [reason, setReason] = React.useState<Reason | "">("");
@@ -87,12 +87,18 @@ export function NewRequestPage() {
             <div className="grid gap-4 sm:grid-cols-2">
               <div className="space-y-1.5">
                 <Label>Sucursal actual</Label>
-                <BranchSelect
-                  value={currentBranchId != null ? String(currentBranchId) : ""}
-                  onChange={() => {}}
-                  placeholder="Sin sucursal asignada"
-                  disabled={currentBranchLoading || currentBranchId == null}
-                />
+                <Select value={currentBranchId != null ? String(currentBranchId) : ""} disabled>
+                  <SelectTrigger className="w-full">
+                    <SelectValue
+                      placeholder={currentBranchLoading ? "Cargando..." : "Sin sucursal asignada"}
+                    />
+                  </SelectTrigger>
+                  <SelectContent>
+                    {currentBranchId != null && currentBranch && (
+                      <SelectItem value={String(currentBranchId)}>{currentBranch}</SelectItem>
+                    )}
+                  </SelectContent>
+                </Select>
               </div>
               <div className="space-y-1.5">
                 <Label>Sucursal deseada</Label>
