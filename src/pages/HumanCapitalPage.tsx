@@ -299,7 +299,7 @@ export function HumanCapitalPage() {
           </div>
 
           <div className="grid gap-4 lg:grid-cols-2">
-            <Card>
+            <Card className="lg:col-span-2">
               <CardHeader>
                 <CardTitle className="text-sm">Solicitudes por región</CardTitle>
               </CardHeader>
