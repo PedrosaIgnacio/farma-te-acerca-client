@@ -310,7 +310,7 @@ export function HumanCapitalPage() {
                     <XAxis dataKey="region" tick={{ fontSize: 11 }} />
                     <YAxis tick={{ fontSize: 11 }} />
                     <Tooltip />
-                    <Bar dataKey="requests" fill="#1F7A4D" radius={[4, 4, 0, 0]} />
+                    <Bar dataKey="requests" name="Solicitudes" fill="#1F7A4D" radius={[4, 4, 0, 0]} />
                   </BarChart>
                 </ResponsiveContainer>
               </CardContent>
