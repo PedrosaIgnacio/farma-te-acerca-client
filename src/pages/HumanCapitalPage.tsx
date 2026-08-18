@@ -19,6 +19,7 @@ import { StatusBadge } from "@/components/shared/StatusBadge";
 import { BranchSelect } from "@/components/shared/BranchSelect";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import {
   Sheet,
   SheetContent,
@@ -27,8 +28,9 @@ import {
   SheetTitle,
 } from "@/components/ui/sheet";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
+import { STATUSES } from "@/data/constants";
 import { ApiError, apiBlob, apiJson } from "@/lib/api";
-import type { AnalyticsResponse, HCRequest } from "@/types";
+import type { AnalyticsResponse, HCRequest, RequestStatus } from "@/types";
 
 export function HumanCapitalPage() {
   const [branchId, setBranchId] = React.useState("");
@@ -37,6 +39,9 @@ export function HumanCapitalPage() {
   const [requestsLoading, setRequestsLoading] = React.useState(false);
   const [requestsError, setRequestsError] = React.useState<string | null>(null);
   const [selected, setSelected] = React.useState<HCRequest | null>(null);
+  const [statusDraft, setStatusDraft] = React.useState<RequestStatus | null>(null);
+  const [statusUpdating, setStatusUpdating] = React.useState(false);
+  const [statusError, setStatusError] = React.useState<string | null>(null);
 
   const [analytics, setAnalytics] = React.useState<AnalyticsResponse | null>(null);
   const [analyticsLoading, setAnalyticsLoading] = React.useState(true);
@@ -97,6 +102,39 @@ export function HumanCapitalPage() {
       setExportError(err instanceof ApiError ? err.message : "No se pudo descargar el reporte.");
     } finally {
       setExporting(false);
+    }
+  };
+
+  const handleSelect = (r: HCRequest) => {
+    setSelected(r);
+    setStatusDraft(r.status);
+    setStatusError(null);
+  };
+
+  const handleSheetOpenChange = (open: boolean) => {
+    if (!open) {
+      setSelected(null);
+      setStatusDraft(null);
+      setStatusError(null);
+    }
+  };
+
+  const handleUpdateStatus = async () => {
+    if (!selected || !statusDraft || statusDraft === selected.status) return;
+    setStatusUpdating(true);
+    setStatusError(null);
+    try {
+      const updated = await apiJson<HCRequest>(`/hc/requests/${selected.id}/status`, {
+        method: "PATCH",
+        body: JSON.stringify({ status: statusDraft }),
+      });
+      setSelected(updated);
+      setStatusDraft(updated.status);
+      setRequests((prev) => prev.map((r) => (r.id === updated.id ? updated : r)));
+    } catch (err) {
+      setStatusError(err instanceof ApiError ? err.message : "No se pudo actualizar el estado.");
+    } finally {
+      setStatusUpdating(false);
     }
   };
 
@@ -175,7 +213,7 @@ export function HumanCapitalPage() {
                     {requests.map((r) => (
                       <tr
                         key={r.id}
-                        onClick={() => setSelected(r)}
+                        onClick={() => handleSelect(r)}
                         className="cursor-pointer border-b border-stone-50 last:border-0 hover:bg-stone-50"
                       >
                         <td className="px-4 py-3 font-medium text-stone-800">{r.collaborator}</td>
@@ -273,7 +311,7 @@ export function HumanCapitalPage() {
         </TabsContent>
       </Tabs>
 
-      <Sheet open={!!selected} onOpenChange={(v) => !v && setSelected(null)}>
+      <Sheet open={!!selected} onOpenChange={handleSheetOpenChange}>
         <SheetContent>
           {selected && (
             <>
@@ -303,6 +341,36 @@ export function HumanCapitalPage() {
                   <StatusBadge status={selected.status} />
                 </div>
               </div>
+
+              <div className="mt-4 space-y-2 border-t border-stone-100 pt-4">
+                <span className="text-xs text-stone-500">Cambiar estado</span>
+                <div className="flex gap-2">
+                  <Select
+                    value={statusDraft ?? undefined}
+                    onValueChange={(v) => setStatusDraft(v as RequestStatus)}
+                  >
+                    <SelectTrigger className="w-full">
+                      <SelectValue />
+                    </SelectTrigger>
+                    <SelectContent>
+                      {STATUSES.map((s) => (
+                        <SelectItem key={s} value={s}>
+                          {s}
+                        </SelectItem>
+                      ))}
+                    </SelectContent>
+                  </Select>
+                  <Button
+                    variant="outline"
+                    onClick={handleUpdateStatus}
+                    disabled={statusUpdating || !statusDraft || statusDraft === selected.status}
+                  >
+                    {statusUpdating ? "Guardando..." : "Guardar"}
+                  </Button>
+                </div>
+                {statusError && <p className="text-sm text-red-600">{statusError}</p>}
+              </div>
+
               <Button
                 className="mt-6 w-full gap-2 bg-[#1F7A4D] hover:bg-[#19653F]"
                 onClick={() => {

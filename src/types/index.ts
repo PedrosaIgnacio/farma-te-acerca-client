@@ -40,6 +40,10 @@ export interface NewRequestInput {
   description?: string;
 }
 
+export interface UpdateRequestStatusInput {
+  status: RequestStatus;
+}
+
 export interface RequestConflictBody {
   message: string;
   existingRequestId: number;
