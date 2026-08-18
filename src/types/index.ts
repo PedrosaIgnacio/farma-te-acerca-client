@@ -42,6 +42,7 @@ export interface NewRequestInput {
 
 export interface UpdateRequestStatusInput {
   status: RequestStatus;
+  motivo: string;
 }
 
 export interface RequestConflictBody {

@@ -1,5 +1,5 @@
 import * as React from "react";
-import { BarChart3, ClipboardList, Download, Mail, Search } from "lucide-react";
+import { BarChart3, ClipboardList, Download, Mail, MoreVertical, Search } from "lucide-react";
 import {
   Bar,
   BarChart,
@@ -19,6 +19,21 @@ import { StatusBadge } from "@/components/shared/StatusBadge";
 import { BranchSelect } from "@/components/shared/BranchSelect";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import {
+  Dialog,
+  DialogContent,
+  DialogDescription,
+  DialogFooter,
+  DialogHeader,
+  DialogTitle,
+} from "@/components/ui/dialog";
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuTrigger,
+} from "@/components/ui/dropdown-menu";
+import { Label } from "@/components/ui/label";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import {
   Sheet,
@@ -28,6 +43,7 @@ import {
   SheetTitle,
 } from "@/components/ui/sheet";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
+import { Textarea } from "@/components/ui/textarea";
 import { STATUSES } from "@/data/constants";
 import { ApiError, apiBlob, apiJson } from "@/lib/api";
 import type { AnalyticsResponse, HCRequest, RequestStatus } from "@/types";
@@ -39,7 +55,9 @@ export function HumanCapitalPage() {
   const [requestsLoading, setRequestsLoading] = React.useState(false);
   const [requestsError, setRequestsError] = React.useState<string | null>(null);
   const [selected, setSelected] = React.useState<HCRequest | null>(null);
-  const [statusDraft, setStatusDraft] = React.useState<RequestStatus | null>(null);
+  const [statusTarget, setStatusTarget] = React.useState<HCRequest | null>(null);
+  const [newStatus, setNewStatus] = React.useState<RequestStatus | null>(null);
+  const [motivo, setMotivo] = React.useState("");
   const [statusUpdating, setStatusUpdating] = React.useState(false);
   const [statusError, setStatusError] = React.useState<string | null>(null);
 
@@ -105,32 +123,32 @@ export function HumanCapitalPage() {
     }
   };
 
-  const handleSelect = (r: HCRequest) => {
-    setSelected(r);
-    setStatusDraft(r.status);
+  const openStatusDialog = (r: HCRequest) => {
+    setStatusTarget(r);
+    setNewStatus(r.status);
+    setMotivo("");
     setStatusError(null);
   };
 
-  const handleSheetOpenChange = (open: boolean) => {
-    if (!open) {
-      setSelected(null);
-      setStatusDraft(null);
-      setStatusError(null);
-    }
+  const closeStatusDialog = () => {
+    setStatusTarget(null);
+    setNewStatus(null);
+    setMotivo("");
+    setStatusError(null);
   };
 
-  const handleUpdateStatus = async () => {
-    if (!selected || !statusDraft || statusDraft === selected.status) return;
+  const handleSubmitStatus = async () => {
+    if (!statusTarget || !newStatus || !motivo.trim() || newStatus === statusTarget.status) return;
     setStatusUpdating(true);
     setStatusError(null);
     try {
-      const updated = await apiJson<HCRequest>(`/hc/requests/${selected.id}/status`, {
+      const updated = await apiJson<HCRequest>(`/hc/requests/${statusTarget.id}/status`, {
         method: "PATCH",
-        body: JSON.stringify({ status: statusDraft }),
+        body: JSON.stringify({ status: newStatus, motivo: motivo.trim() }),
       });
-      setSelected(updated);
-      setStatusDraft(updated.status);
       setRequests((prev) => prev.map((r) => (r.id === updated.id ? updated : r)));
+      setSelected((prev) => (prev?.id === updated.id ? updated : prev));
+      closeStatusDialog();
     } catch (err) {
       setStatusError(err instanceof ApiError ? err.message : "No se pudo actualizar el estado.");
     } finally {
@@ -207,13 +225,16 @@ export function HumanCapitalPage() {
                       <th className="px-4 py-3 font-medium">Motivo</th>
                       <th className="px-4 py-3 font-medium">Fecha</th>
                       <th className="px-4 py-3 font-medium">Estado</th>
+                      <th className="px-4 py-3 font-medium">
+                        <span className="sr-only">Acciones</span>
+                      </th>
                     </tr>
                   </thead>
                   <tbody>
                     {requests.map((r) => (
                       <tr
                         key={r.id}
-                        onClick={() => handleSelect(r)}
+                        onClick={() => setSelected(r)}
                         className="cursor-pointer border-b border-stone-50 last:border-0 hover:bg-stone-50"
                       >
                         <td className="px-4 py-3 font-medium text-stone-800">{r.collaborator}</td>
@@ -222,6 +243,25 @@ export function HumanCapitalPage() {
                         <td className="px-4 py-3 text-stone-600">{r.date}</td>
                         <td className="px-4 py-3">
                           <StatusBadge status={r.status} />
+                        </td>
+                        <td className="px-4 py-3 text-right">
+                          <DropdownMenu>
+                            <DropdownMenuTrigger asChild>
+                              <Button
+                                variant="ghost"
+                                size="icon"
+                                onClick={(e) => e.stopPropagation()}
+                              >
+                                <MoreVertical className="h-4 w-4" />
+                                <span className="sr-only">Acciones</span>
+                              </Button>
+                            </DropdownMenuTrigger>
+                            <DropdownMenuContent align="end" onClick={(e) => e.stopPropagation()}>
+                              <DropdownMenuItem onClick={() => openStatusDialog(r)}>
+                                Cambiar estado
+                              </DropdownMenuItem>
+                            </DropdownMenuContent>
+                          </DropdownMenu>
                         </td>
                       </tr>
                     ))}
@@ -311,7 +351,7 @@ export function HumanCapitalPage() {
         </TabsContent>
       </Tabs>
 
-      <Sheet open={!!selected} onOpenChange={handleSheetOpenChange}>
+      <Sheet open={!!selected} onOpenChange={(v) => !v && setSelected(null)}>
         <SheetContent>
           {selected && (
             <>
@@ -342,35 +382,6 @@ export function HumanCapitalPage() {
                 </div>
               </div>
 
-              <div className="mt-4 space-y-2 border-t border-stone-100 pt-4">
-                <span className="text-xs text-stone-500">Cambiar estado</span>
-                <div className="flex gap-2">
-                  <Select
-                    value={statusDraft ?? undefined}
-                    onValueChange={(v) => setStatusDraft(v as RequestStatus)}
-                  >
-                    <SelectTrigger className="w-full">
-                      <SelectValue />
-                    </SelectTrigger>
-                    <SelectContent>
-                      {STATUSES.map((s) => (
-                        <SelectItem key={s} value={s}>
-                          {s}
-                        </SelectItem>
-                      ))}
-                    </SelectContent>
-                  </Select>
-                  <Button
-                    variant="outline"
-                    onClick={handleUpdateStatus}
-                    disabled={statusUpdating || !statusDraft || statusDraft === selected.status}
-                  >
-                    {statusUpdating ? "Guardando..." : "Guardar"}
-                  </Button>
-                </div>
-                {statusError && <p className="text-sm text-red-600">{statusError}</p>}
-              </div>
-
               <Button
                 className="mt-6 w-full gap-2 bg-[#1F7A4D] hover:bg-[#19653F]"
                 onClick={() => {
@@ -383,6 +394,69 @@ export function HumanCapitalPage() {
           )}
         </SheetContent>
       </Sheet>
+
+      <Dialog open={!!statusTarget} onOpenChange={(v) => !v && closeStatusDialog()}>
+        <DialogContent>
+          {statusTarget && (
+            <>
+              <DialogHeader>
+                <DialogTitle>Cambiar estado</DialogTitle>
+                <DialogDescription>
+                  {statusTarget.collaborator} — solicitud a {statusTarget.desiredBranch}
+                </DialogDescription>
+              </DialogHeader>
+
+              <div className="space-y-4">
+                <div className="space-y-1.5">
+                  <Label>Nuevo estado</Label>
+                  <Select
+                    value={newStatus ?? undefined}
+                    onValueChange={(v) => setNewStatus(v as RequestStatus)}
+                  >
+                    <SelectTrigger className="w-full">
+                      <SelectValue />
+                    </SelectTrigger>
+                    <SelectContent>
+                      {STATUSES.map((s) => (
+                        <SelectItem key={s} value={s}>
+                          {s}
+                        </SelectItem>
+                      ))}
+                    </SelectContent>
+                  </Select>
+                </div>
+
+                <div className="space-y-1.5">
+                  <Label>Motivo</Label>
+                  <Textarea
+                    maxLength={240}
+                    value={motivo}
+                    onChange={(e) => setMotivo(e.target.value)}
+                    placeholder="Explicá el motivo del cambio de estado..."
+                  />
+                </div>
+
+                {statusError && <p className="text-sm text-red-600">{statusError}</p>}
+              </div>
+
+              <DialogFooter>
+                <Button variant="outline" onClick={closeStatusDialog}>
+                  Cancelar
+                </Button>
+                <Button
+                  className="bg-[#1F7A4D] hover:bg-[#19653F]"
+                  onClick={handleSubmitStatus}
+                  disabled={
+                    statusUpdating || !motivo.trim() || !newStatus || newStatus === statusTarget.status
+                  }
+                >
+                  {statusUpdating ? "Guardando..." : "Guardar"}
+                </Button>
+              </DialogFooter>
+            </>
+          )}
+        </DialogContent>
+      </Dialog>
     </div>
   );
 }
