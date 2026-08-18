@@ -1,9 +1,9 @@
 import * as React from "react";
 import {
   BarChart3,
-  CalendarRange,
   ClipboardList,
   Download,
+  Filter,
   Mail,
   MoreVertical,
   Search,
@@ -397,9 +397,14 @@ export function HumanCapitalPage() {
                   Quitar filtro
                 </Button>
               )}
-              <Button variant="outline" size="sm" className="gap-2" onClick={() => setFilterOpen(true)}>
-                <CalendarRange className="h-4 w-4" /> Filtrar por fecha
-              </Button>
+              <div className="relative inline-flex">
+                <Button variant="outline" size="sm" className="gap-2" onClick={() => setFilterOpen(true)}>
+                  <Filter className="h-4 w-4" /> Filtros
+                </Button>
+                {dateFilter && (
+                  <span className="absolute -right-1 -top-1 h-2.5 w-2.5 rounded-full bg-[#1F7A4D] ring-2 ring-white" />
+                )}
+              </div>
             </div>
           </div>
 
@@ -520,28 +525,30 @@ export function HumanCapitalPage() {
       </Sheet>
 
       <Sheet open={filterOpen} onOpenChange={setFilterOpen}>
-        <SheetContent>
+        <SheetContent className="flex flex-col">
           <SheetHeader>
-            <SheetTitle>Filtrar por fecha</SheetTitle>
-            <SheetDescription>
-              Elegí un período predefinido o un rango personalizado para filtrar la analítica.
-            </SheetDescription>
+            <SheetTitle>Filtros</SheetTitle>
+            <SheetDescription>Ajustá los filtros que se aplican a la analítica.</SheetDescription>
           </SheetHeader>
 
-          <div className="mt-6 space-y-4">
-            <RadioGroup
-              value={period ?? undefined}
-              onValueChange={(v) => setPeriod(v as PeriodOption)}
-            >
-              {PERIOD_OPTIONS.map((opt) => (
-                <div key={opt.value} className="flex items-center gap-2">
-                  <RadioGroupItem value={opt.value} id={`period-${opt.value}`} />
-                  <Label htmlFor={`period-${opt.value}`} className="font-normal">
-                    {opt.label}
-                  </Label>
-                </div>
-              ))}
-            </RadioGroup>
+          <div className="mt-6 flex-1 space-y-4 overflow-y-auto">
+            <div className="space-y-3">
+              <Label className="text-sm font-medium text-stone-700">Filtrar por período</Label>
+              <RadioGroup
+                className="gap-3"
+                value={period ?? undefined}
+                onValueChange={(v) => setPeriod(v as PeriodOption)}
+              >
+                {PERIOD_OPTIONS.map((opt) => (
+                  <div key={opt.value} className="flex items-center gap-2">
+                    <RadioGroupItem value={opt.value} id={`period-${opt.value}`} />
+                    <Label htmlFor={`period-${opt.value}`} className="font-normal">
+                      {opt.label}
+                    </Label>
+                  </div>
+                ))}
+              </RadioGroup>
+            </div>
 
             {period === "otro" && (
               <div className="grid grid-cols-2 gap-3 pt-2">
@@ -569,12 +576,12 @@ export function HumanCapitalPage() {
             )}
           </div>
 
-          <div className="mt-6 flex justify-end gap-2">
-            <Button variant="outline" onClick={handleClearFilter}>
+          <div className="mt-6 flex gap-2">
+            <Button variant="outline" className="flex-1" onClick={handleClearFilter}>
               Quitar filtro
             </Button>
             <Button
-              className="bg-[#1F7A4D] hover:bg-[#19653F]"
+              className="flex-1 bg-[#1F7A4D] hover:bg-[#19653F]"
               onClick={handleApplyFilter}
               disabled={!period || (period === "otro" && (!customFrom || !customTo))}
             >
