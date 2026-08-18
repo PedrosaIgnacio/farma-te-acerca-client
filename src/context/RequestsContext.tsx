@@ -2,13 +2,15 @@ import * as React from "react";
 import { Outlet } from "react-router-dom";
 
 import { ApiError, apiJson } from "@/lib/api";
-import type { NewRequestInput, RequestHistoryEntry } from "@/types";
+import type { CurrentUserResponse, NewRequestInput, RequestHistoryEntry } from "@/types";
 
 interface RequestsContextValue {
   history: RequestHistoryEntry[];
   loading: boolean;
   error: string | null;
   addRequest: (input: NewRequestInput) => Promise<RequestHistoryEntry>;
+  currentBranchId: number | null;
+  currentBranchLoading: boolean;
 }
 
 const RequestsContext = React.createContext<RequestsContextValue | null>(null);
@@ -17,6 +19,8 @@ export function RequestsProvider() {
   const [history, setHistory] = React.useState<RequestHistoryEntry[]>([]);
   const [loading, setLoading] = React.useState(true);
   const [error, setError] = React.useState<string | null>(null);
+  const [currentBranchId, setCurrentBranchId] = React.useState<number | null>(null);
+  const [currentBranchLoading, setCurrentBranchLoading] = React.useState(true);
 
   React.useEffect(() => {
     let cancelled = false;
@@ -37,6 +41,21 @@ export function RequestsProvider() {
     };
   }, []);
 
+  React.useEffect(() => {
+    let cancelled = false;
+    setCurrentBranchLoading(true);
+    apiJson<CurrentUserResponse>("/auth/me")
+      .then((data) => {
+        if (!cancelled) setCurrentBranchId(data.currentBranchId);
+      })
+      .finally(() => {
+        if (!cancelled) setCurrentBranchLoading(false);
+      });
+    return () => {
+      cancelled = true;
+    };
+  }, []);
+
   const addRequest = React.useCallback(async (input: NewRequestInput) => {
     const entry = await apiJson<RequestHistoryEntry>("/requests", {
       method: "POST",
@@ -47,8 +66,8 @@ export function RequestsProvider() {
   }, []);
 
   const value = React.useMemo(
-    () => ({ history, loading, error, addRequest }),
-    [history, loading, error, addRequest],
+    () => ({ history, loading, error, addRequest, currentBranchId, currentBranchLoading }),
+    [history, loading, error, addRequest, currentBranchId, currentBranchLoading],
   );
 
   return (

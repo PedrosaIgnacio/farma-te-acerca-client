@@ -16,9 +16,8 @@ import type { Reason } from "@/types";
 
 export function NewRequestPage() {
   const navigate = useNavigate();
-  const { addRequest } = useRequests();
+  const { addRequest, currentBranchId, currentBranchLoading } = useRequests();
 
-  const [currentBranch, setCurrentBranch] = React.useState("");
   const [desiredBranch, setDesiredBranch] = React.useState("");
   const [reason, setReason] = React.useState<Reason | "">("");
   const [otherReason, setOtherReason] = React.useState("");
@@ -29,14 +28,14 @@ export function NewRequestPage() {
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    if (!currentBranch || !desiredBranch || !reason) return;
+    if (!currentBranchId || !desiredBranch || !reason) return;
 
     setConflict(null);
     setError(null);
     setSubmitting(true);
     try {
       const newEntry = await addRequest({
-        currentBranchId: Number(currentBranch),
+        currentBranchId,
         desiredBranchId: Number(desiredBranch),
         reason,
         otherReason: reason === "Otro" ? otherReason : undefined,
@@ -88,7 +87,12 @@ export function NewRequestPage() {
             <div className="grid gap-4 sm:grid-cols-2">
               <div className="space-y-1.5">
                 <Label>Sucursal actual</Label>
-                <BranchSelect value={currentBranch} onChange={setCurrentBranch} placeholder="Elegí tu sucursal" />
+                <BranchSelect
+                  value={currentBranchId != null ? String(currentBranchId) : ""}
+                  onChange={() => {}}
+                  placeholder="Sin sucursal asignada"
+                  disabled={currentBranchLoading || currentBranchId == null}
+                />
               </div>
               <div className="space-y-1.5">
                 <Label>Sucursal deseada</Label>
@@ -130,7 +134,11 @@ export function NewRequestPage() {
               <p className="text-right text-xs text-stone-400">{description.length}/240</p>
             </div>
 
-            <Button type="submit" disabled={submitting} className="gap-2 bg-[#1F7A4D] hover:bg-[#19653F]">
+            <Button
+              type="submit"
+              disabled={submitting || currentBranchLoading || currentBranchId == null}
+              className="gap-2 bg-[#1F7A4D] hover:bg-[#19653F]"
+            >
               <Send className="h-4 w-4" /> {submitting ? "Enviando..." : "Cargar solicitud"}
             </Button>
           </form>

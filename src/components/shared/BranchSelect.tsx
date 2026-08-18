@@ -6,17 +6,19 @@ interface BranchSelectProps {
   value: string;
   onChange: (value: string) => void;
   placeholder?: string;
+  disabled?: boolean;
 }
 
 export function BranchSelect({
   value,
   onChange,
   placeholder = "Seleccioná una sucursal",
+  disabled = false,
 }: BranchSelectProps) {
   const { branches, loading } = useBranches();
 
   return (
-    <Select value={value} onValueChange={onChange}>
+    <Select value={value} onValueChange={onChange} disabled={disabled}>
       <SelectTrigger className="w-full">
         <SelectValue placeholder={loading ? "Cargando sucursales..." : placeholder} />
       </SelectTrigger>

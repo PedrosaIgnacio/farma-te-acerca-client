@@ -138,9 +138,13 @@ duplicate-active-request check and id/date generation that used to live there mo
   UI copy that assumes a specific initial status without re-checking the API.
 - Azure/365 SSO ("Iniciar sesión con Microsoft 365") is a stub — it shows an inline message instead
   of attempting OAuth, since exercising it needs Farmacity's real Azure AD tenant credentials.
-- `NewRequestPage`'s "sucursal actual" select has no pre-filled default: the API has no
-  "collaborator's home branch" endpoint (`GET /auth/me` doesn't return one), so unlike the old
-  mock (which hardcoded "Farmacity Palermo") the user must pick both branches explicitly.
+- `NewRequestPage`'s "sucursal actual" select is pre-filled and locked to the collaborator's
+  assigned branch — `GET /auth/me` now returns `currentBranchId`/`currentBranch` (the active
+  `ColabSucursal` row, resolved server-side in `AuthService.me`), fetched once by
+  `RequestsProvider` and exposed via `useRequests()`. Only "sucursal deseada" is user-editable.
+  If a collaborator has no active branch assignment, the select shows "Sin sucursal asignada" and
+  the submit button stays disabled — this shouldn't happen with real HR-managed data but the seed
+  should keep every demo `collaborator` account assigned to one.
 - `yarn lint` currently reports four `react-refresh/only-export-components` warnings (in
   `button.tsx`, `badge.tsx`, `AuthContext.tsx`, `RequestsContext.tsx`) from co-locating `cva`
   variants / the `useAuth`/`useRequests` hooks with their components. This is expected with the

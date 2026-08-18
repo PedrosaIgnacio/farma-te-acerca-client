@@ -10,6 +10,16 @@ export interface Session {
   accessToken: string;
 }
 
+export interface CurrentUserResponse {
+  id: string;
+  legajo: string;
+  fullName: string;
+  role: Role;
+  email: string;
+  currentBranchId: number | null;
+  currentBranch: string | null;
+}
+
 export interface LoginResponse {
   accessToken: string;
   refreshToken: string;
