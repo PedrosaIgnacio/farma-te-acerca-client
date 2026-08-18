@@ -38,7 +38,6 @@ export interface RequestConflictBody {
 
 export interface AnalyticsFilters {
   region?: string;
-  zona?: string;
   desiredBranchId?: number;
   estado?: RequestStatus;
   from?: string;
@@ -62,7 +61,7 @@ export interface Branch {
   id: number;
   name: string;
   region: string;
-  zone: string;
+  provincia: string;
 }
 
 export interface RequestHistoryEntry {
