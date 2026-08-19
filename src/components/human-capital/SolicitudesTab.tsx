@@ -62,112 +62,69 @@ export function SolicitudesTab() {
       )}
 
       {show && !loading && !error && requests.length > 0 && (
-        <>
-          <div className="space-y-3 sm:hidden">
-            {requests.map((r) => (
-              <Card
-                key={r.id}
-                onClick={() => setSelected(r)}
-                className="cursor-pointer hover:border-[#1F7A4D]/40"
-              >
-                <CardContent className="space-y-2 pt-4 text-sm">
-                  <div className="flex items-start justify-between gap-2">
-                    <p className="min-w-0 truncate font-medium text-stone-800">{r.collaborator}</p>
-                    <DropdownMenu>
-                      <DropdownMenuTrigger asChild>
-                        <Button
-                          variant="ghost"
-                          size="icon"
-                          className="-mr-2 -mt-1 shrink-0"
-                          onClick={(e) => e.stopPropagation()}
-                        >
-                          <MoreVertical className="h-4 w-4" />
-                          <span className="sr-only">Acciones</span>
-                        </Button>
-                      </DropdownMenuTrigger>
-                      <DropdownMenuContent align="end" onClick={(e) => e.stopPropagation()}>
-                        <DropdownMenuItem onClick={() => setStatusTarget(r)}>
-                          Cambiar estado
-                        </DropdownMenuItem>
-                      </DropdownMenuContent>
-                    </DropdownMenu>
-                  </div>
-                  <div className="flex flex-wrap items-center gap-x-2 gap-y-1 text-stone-500">
-                    <span className="truncate">{r.currentBranch}</span>
-                    <span>·</span>
-                    <span className="truncate">{r.reason}</span>
-                  </div>
-                  <div className="flex items-center justify-between gap-2">
-                    <span className="text-stone-500">{r.date}</span>
-                    <StatusBadge status={r.status} />
-                  </div>
-                </CardContent>
-              </Card>
-            ))}
-          </div>
-
-          <Card className="hidden sm:block">
-            <CardContent className="overflow-x-auto p-0">
-              <table className="w-full text-sm">
-                <thead>
-                  <tr className="border-b border-stone-100 text-left text-xs uppercase tracking-wide text-stone-400">
-                    <th className="px-4 py-3 font-medium">Colaborador</th>
-                    <th className="px-4 py-3 font-medium">Sucursal actual</th>
-                    <th className="px-4 py-3 font-medium">Motivo</th>
-                    <th className="px-4 py-3 font-medium">Fecha</th>
-                    <th className="px-4 py-3 font-medium">Estado</th>
-                    <th className="px-4 py-3 font-medium">
-                      <span className="sr-only">Acciones</span>
-                    </th>
+        <Card>
+          <CardContent className="overflow-x-auto p-0">
+            <table className="w-full text-sm">
+              <thead>
+                <tr className="border-b border-stone-100 text-left text-xs uppercase tracking-wide text-stone-400">
+                  <th className="px-4 py-3 font-medium">Colaborador</th>
+                  <th className="hidden px-4 py-3 font-medium sm:table-cell">Sucursal actual</th>
+                  <th className="hidden px-4 py-3 font-medium sm:table-cell">Motivo</th>
+                  <th className="px-4 py-3 font-medium">Fecha</th>
+                  <th className="hidden px-4 py-3 font-medium sm:table-cell">Estado</th>
+                  <th className="hidden px-4 py-3 font-medium sm:table-cell">
+                    <span className="sr-only">Acciones</span>
+                  </th>
+                </tr>
+              </thead>
+              <tbody>
+                {requests.map((r) => (
+                  <tr
+                    key={r.id}
+                    onClick={() => setSelected(r)}
+                    className="cursor-pointer border-b border-stone-50 last:border-0 hover:bg-stone-50"
+                  >
+                    <td className="max-w-[8rem] truncate px-4 py-3 font-medium text-stone-800 sm:max-w-[12rem]">
+                      {r.collaborator}
+                    </td>
+                    <td className="hidden max-w-[10rem] truncate px-4 py-3 text-stone-600 sm:table-cell">
+                      {r.currentBranch}
+                    </td>
+                    <td className="hidden max-w-[10rem] truncate px-4 py-3 text-stone-600 sm:table-cell">
+                      {r.reason}
+                    </td>
+                    <td className="whitespace-nowrap px-4 py-3 text-stone-600">{r.date}</td>
+                    <td className="hidden px-4 py-3 sm:table-cell">
+                      <StatusBadge status={r.status} />
+                    </td>
+                    <td className="hidden px-4 py-3 text-right sm:table-cell">
+                      <DropdownMenu>
+                        <DropdownMenuTrigger asChild>
+                          <Button variant="ghost" size="icon" onClick={(e) => e.stopPropagation()}>
+                            <MoreVertical className="h-4 w-4" />
+                            <span className="sr-only">Acciones</span>
+                          </Button>
+                        </DropdownMenuTrigger>
+                        <DropdownMenuContent align="end" onClick={(e) => e.stopPropagation()}>
+                          <DropdownMenuItem onClick={() => setStatusTarget(r)}>
+                            Cambiar estado
+                          </DropdownMenuItem>
+                        </DropdownMenuContent>
+                      </DropdownMenu>
+                    </td>
                   </tr>
-                </thead>
-                <tbody>
-                  {requests.map((r) => (
-                    <tr
-                      key={r.id}
-                      onClick={() => setSelected(r)}
-                      className="cursor-pointer border-b border-stone-50 last:border-0 hover:bg-stone-50"
-                    >
-                      <td className="max-w-[12rem] truncate px-4 py-3 font-medium text-stone-800">
-                        {r.collaborator}
-                      </td>
-                      <td className="max-w-[10rem] truncate px-4 py-3 text-stone-600">
-                        {r.currentBranch}
-                      </td>
-                      <td className="max-w-[10rem] truncate px-4 py-3 text-stone-600">{r.reason}</td>
-                      <td className="px-4 py-3 whitespace-nowrap text-stone-600">{r.date}</td>
-                      <td className="px-4 py-3">
-                        <StatusBadge status={r.status} />
-                      </td>
-                      <td className="px-4 py-3 text-right">
-                        <DropdownMenu>
-                          <DropdownMenuTrigger asChild>
-                            <Button
-                              variant="ghost"
-                              size="icon"
-                              onClick={(e) => e.stopPropagation()}
-                            >
-                              <MoreVertical className="h-4 w-4" />
-                              <span className="sr-only">Acciones</span>
-                            </Button>
-                          </DropdownMenuTrigger>
-                          <DropdownMenuContent align="end" onClick={(e) => e.stopPropagation()}>
-                            <DropdownMenuItem onClick={() => setStatusTarget(r)}>
-                              Cambiar estado
-                            </DropdownMenuItem>
-                          </DropdownMenuContent>
-                        </DropdownMenu>
-                      </td>
-                    </tr>
-                  ))}
-                </tbody>
-              </table>
-            </CardContent>
-          </Card>
-        </>
+                ))}
+              </tbody>
+            </table>
+          </CardContent>
+        </Card>
       )}
 
-      <RequestDetailSheet request={selected} onOpenChange={(v) => !v && setSelected(null)} />
+      <RequestDetailSheet
+        request={selected}
+        onOpenChange={(v) => !v && setSelected(null)}
+        onChangeStatus={setStatusTarget}
+      />
       <RequestStatusDialog
         request={statusTarget}
         onOpenChange={(v) => !v && setStatusTarget(null)}

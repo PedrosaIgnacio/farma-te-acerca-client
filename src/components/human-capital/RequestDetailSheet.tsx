@@ -14,9 +14,10 @@ import type { HCRequest } from "@/types";
 interface RequestDetailSheetProps {
   request: HCRequest | null;
   onOpenChange: (open: boolean) => void;
+  onChangeStatus: (request: HCRequest) => void;
 }
 
-export function RequestDetailSheet({ request, onOpenChange }: RequestDetailSheetProps) {
+export function RequestDetailSheet({ request, onOpenChange, onChangeStatus }: RequestDetailSheetProps) {
   return (
     <Sheet open={!!request} onOpenChange={onOpenChange}>
       <SheetContent>
@@ -49,14 +50,19 @@ export function RequestDetailSheet({ request, onOpenChange }: RequestDetailSheet
               </div>
             </div>
 
-            <Button
-              className="mt-6 w-full gap-2 bg-[#1F7A4D] hover:bg-[#19653F]"
-              onClick={() => {
-                window.location.href = `mailto:${request.email}`;
-              }}
-            >
-              <Mail className="h-4 w-4" /> Contactar
-            </Button>
+            <div className="mt-6 flex flex-col gap-2">
+              <Button
+                className="w-full gap-2 bg-[#1F7A4D] hover:bg-[#19653F]"
+                onClick={() => {
+                  window.location.href = `mailto:${request.email}`;
+                }}
+              >
+                <Mail className="h-4 w-4" /> Contactar
+              </Button>
+              <Button variant="outline" className="w-full" onClick={() => onChangeStatus(request)}>
+                Cambiar estado
+              </Button>
+            </div>
           </>
         )}
       </SheetContent>
