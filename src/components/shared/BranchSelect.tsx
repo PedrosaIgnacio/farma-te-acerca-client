@@ -16,7 +16,7 @@ export function BranchSelect({
   const { branches, loading } = useBranches();
 
   return (
-    <Select value={value} onValueChange={onChange}>
+    <Select value={value} onValueChange={onChange} disabled={loading}>
       <SelectTrigger className="w-full">
         <SelectValue placeholder={loading ? "Cargando sucursales..." : placeholder} />
       </SelectTrigger>

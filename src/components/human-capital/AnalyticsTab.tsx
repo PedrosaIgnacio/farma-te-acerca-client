@@ -16,6 +16,7 @@ import {
 
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { Skeleton } from "@/components/ui/skeleton";
 import { useHcAnalytics, type AnalyticsDateFilter } from "@/hooks/useHcAnalytics";
 import { ApiError, apiBlob } from "@/lib/api";
 
@@ -70,8 +71,9 @@ export function AnalyticsTab({ dateFilter }: AnalyticsTabProps) {
         {loading
           ? Array.from({ length: 4 }, (_, i) => (
               <Card key={i}>
-                <CardContent className="pt-5">
-                  <p className="text-2xl font-semibold text-stone-800">—</p>
+                <CardContent className="space-y-2 pt-5">
+                  <Skeleton className="h-7 w-12" />
+                  <Skeleton className="h-3 w-20" />
                 </CardContent>
               </Card>
             ))
@@ -91,15 +93,19 @@ export function AnalyticsTab({ dateFilter }: AnalyticsTabProps) {
             <CardTitle className="text-sm">Solicitudes por región</CardTitle>
           </CardHeader>
           <CardContent className="h-64">
-            <ResponsiveContainer width="100%" height="100%">
-              <BarChart data={analytics?.regionData ?? []}>
-                <CartesianGrid strokeDasharray="3 3" stroke="#EEEDE9" />
-                <XAxis dataKey="region" tick={{ fontSize: 11 }} />
-                <YAxis tick={{ fontSize: 11 }} />
-                <Tooltip />
-                <Bar dataKey="requests" name="Solicitudes" fill="#1F7A4D" radius={[4, 4, 0, 0]} />
-              </BarChart>
-            </ResponsiveContainer>
+            {loading ? (
+              <Skeleton className="h-full w-full" />
+            ) : (
+              <ResponsiveContainer width="100%" height="100%">
+                <BarChart data={analytics?.regionData ?? []}>
+                  <CartesianGrid strokeDasharray="3 3" stroke="#EEEDE9" />
+                  <XAxis dataKey="region" tick={{ fontSize: 11 }} />
+                  <YAxis tick={{ fontSize: 11 }} />
+                  <Tooltip />
+                  <Bar dataKey="requests" name="Solicitudes" fill="#1F7A4D" radius={[4, 4, 0, 0]} />
+                </BarChart>
+              </ResponsiveContainer>
+            )}
           </CardContent>
         </Card>
 
@@ -108,23 +114,27 @@ export function AnalyticsTab({ dateFilter }: AnalyticsTabProps) {
             <CardTitle className="text-sm">Distribución por estado</CardTitle>
           </CardHeader>
           <CardContent className="h-64">
-            <ResponsiveContainer width="100%" height="100%">
-              <PieChart>
-                <Pie
-                  data={analytics?.statusData ?? []}
-                  dataKey="value"
-                  nameKey="name"
-                  innerRadius={50}
-                  outerRadius={80}
-                >
-                  {(analytics?.statusData ?? []).map((d) => (
-                    <Cell key={d.name} fill={d.color} />
-                  ))}
-                </Pie>
-                <Legend />
-                <Tooltip />
-              </PieChart>
-            </ResponsiveContainer>
+            {loading ? (
+              <Skeleton className="h-full w-full" />
+            ) : (
+              <ResponsiveContainer width="100%" height="100%">
+                <PieChart>
+                  <Pie
+                    data={analytics?.statusData ?? []}
+                    dataKey="value"
+                    nameKey="name"
+                    innerRadius={50}
+                    outerRadius={80}
+                  >
+                    {(analytics?.statusData ?? []).map((d) => (
+                      <Cell key={d.name} fill={d.color} />
+                    ))}
+                  </Pie>
+                  <Legend />
+                  <Tooltip />
+                </PieChart>
+              </ResponsiveContainer>
+            )}
           </CardContent>
         </Card>
       </div>

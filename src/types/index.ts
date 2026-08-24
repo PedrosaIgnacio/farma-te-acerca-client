@@ -2,7 +2,13 @@ export type Role = "collaborator" | "hc" | "dt";
 
 export type Reason = "Mudanza" | "Movilidad" | "Estudios" | "Otro";
 
-export type RequestStatus = "Activa" | "En curso" | "Cancelada" | "Finalizada";
+export type RequestStatus =
+  | "Activa"
+  | "Aprobado"
+  | "En curso"
+  | "Finalizada"
+  | "No aprobado"
+  | "Cancelada";
 
 export interface Session {
   user: string;
@@ -86,6 +92,25 @@ export interface RequestHistoryEntry {
   status: RequestStatus;
 }
 
+export interface RequestStatusHistoryEntry {
+  status: RequestStatus;
+  startDate: string;
+  endDate: string | null;
+  motivo: string | null;
+}
+
+export interface RequestDetail {
+  id: number;
+  currentBranch: string;
+  desiredBranch: string;
+  reason: Reason;
+  otherReason: string | null;
+  description: string | null;
+  date: string;
+  status: RequestStatus;
+  history: RequestStatusHistoryEntry[];
+}
+
 export interface HCRequest {
   id: number;
   collaborator: string;
@@ -96,6 +121,14 @@ export interface HCRequest {
   date: string;
   status: RequestStatus;
   email: string;
+}
+
+export interface HcCollaborator {
+  id: string;
+  legajo: string;
+  name: string;
+  currentBranchId: number | null;
+  currentBranch: string | null;
 }
 
 export interface NearbyEmployee {

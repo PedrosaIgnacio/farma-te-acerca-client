@@ -6,6 +6,7 @@ import { EmptyState } from "@/components/shared/EmptyState";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
+import { Skeleton } from "@/components/ui/skeleton";
 import {
   Dialog,
   DialogContent,
@@ -43,7 +44,7 @@ export function DTPage() {
   };
 
   return (
-    <div className="mx-auto max-w-4xl space-y-6 p-6">
+    <div className="space-y-6 p-6">
       <div>
         <h1 className="text-xl font-semibold text-stone-800">Colaboradores cercanos</h1>
         <p className="text-sm text-stone-500">
@@ -65,7 +66,21 @@ export function DTPage() {
       </div>
 
       {show && loading && (
-        <p className="py-6 text-center text-sm text-stone-400">Buscando colaboradores cercanos...</p>
+        <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
+          {Array.from({ length: 6 }, (_, i) => (
+            <Card key={i}>
+              <CardContent className="pt-5">
+                <Skeleton className="mb-3 h-10 w-10 rounded-full" />
+                <Skeleton className="h-4 w-32" />
+                <Skeleton className="mt-1.5 h-3 w-24" />
+                <div className="mt-3 flex items-center justify-between">
+                  <Skeleton className="h-5 w-16 rounded-full" />
+                  <Skeleton className="h-4 w-4" />
+                </div>
+              </CardContent>
+            </Card>
+          ))}
+        </div>
       )}
 
       {show && !loading && error && (

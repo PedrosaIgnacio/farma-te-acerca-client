@@ -18,7 +18,7 @@ export function AppShell() {
   };
 
   return (
-    <div className="flex h-screen flex-col bg-[#F6F7F3]">
+    <div className="fixed inset-0 flex flex-col overflow-hidden bg-[#F6F7F3]">
       <AppHeader user={session.user} role={session.role} onLogout={handleLogout} />
       <div className="flex flex-1 overflow-hidden">
         <aside className="hidden w-56 shrink-0 overflow-y-auto border-r border-stone-200 bg-white p-4 sm:block">
