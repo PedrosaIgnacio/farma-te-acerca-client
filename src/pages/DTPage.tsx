@@ -140,9 +140,15 @@ export function DTPage() {
                   <span className="text-stone-500">Distancia</span>
                   <span className="font-medium text-stone-800">{selected.distance}</span>
                 </div>
-                <div className="flex justify-between pb-2">
+                <div className="flex justify-between border-b border-stone-100 pb-2">
                   <span className="text-stone-500">Email</span>
                   <span className="font-medium text-stone-800">{selected.email}</span>
+                </div>
+                <div className="flex justify-between pb-2">
+                  <span className="text-stone-500">Teléfono</span>
+                  <span className="font-medium text-stone-800">
+                    {selected.phone ?? "Sin teléfono cargado"}
+                  </span>
                 </div>
               </div>
               <DialogFooter>

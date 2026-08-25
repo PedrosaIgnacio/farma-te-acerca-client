@@ -44,6 +44,15 @@ export function RelocationRequestForm({
   const [error, setError] = React.useState<string | null>(null);
   const [submitting, setSubmitting] = React.useState(false);
 
+  // BranchSelect already excludes currentBranchId from the "sucursal deseada" options, but a
+  // previously chosen value can still match it after currentBranchId changes underneath it (HC
+  // swapping the selected colaborador) — guard here too rather than relying on the 400 round trip.
+  React.useEffect(() => {
+    if (currentBranchId != null && desiredBranch === String(currentBranchId)) {
+      setDesiredBranch("");
+    }
+  }, [currentBranchId, desiredBranch]);
+
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!currentBranchId || !desiredBranch || !reason) return;
@@ -113,7 +122,12 @@ export function RelocationRequestForm({
               </div>
               <div className="space-y-1.5">
                 <Label>Sucursal deseada</Label>
-                <BranchSelect value={desiredBranch} onChange={setDesiredBranch} placeholder="Elegí destino" />
+                <BranchSelect
+                  value={desiredBranch}
+                  onChange={setDesiredBranch}
+                  placeholder="Elegí destino"
+                  excludeId={currentBranchId}
+                />
               </div>
             </div>
 

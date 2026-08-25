@@ -138,6 +138,7 @@ export interface NearbyEmployee {
   currentBranch: string;
   distance: string;
   email: string;
+  phone: string | null;
 }
 
 export interface RegionData {

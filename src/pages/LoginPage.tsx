@@ -1,10 +1,9 @@
 import * as React from "react";
-import { MapPin } from "lucide-react";
 import { Navigate, useNavigate } from "react-router-dom";
 
 import { ForgotPasswordDialog } from "@/components/auth/ForgotPasswordDialog";
 import { Button } from "@/components/ui/button";
-import { Card, CardContent } from "@/components/ui/card";
+import { Card } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { ROLE_HOME } from "@/config/navigation";
@@ -44,18 +43,21 @@ export function LoginPage() {
   };
 
   return (
-    <div className="flex min-h-screen items-center justify-center bg-[#F6F7F3] px-4">
-      <div className="w-full max-w-sm">
-        <div className="mb-6 flex flex-col items-center gap-2">
-          <div className="flex h-11 w-11 items-center justify-center rounded-xl bg-[#1F7A4D] text-white shadow-sm">
-            <MapPin className="h-5 w-5" />
-          </div>
-          <h1 className="text-lg font-semibold text-stone-800">FarmaTeAcerca</h1>
-          <p className="text-sm text-stone-500">Gestión de relocalización de colaboradores</p>
-        </div>
+    <div className="flex min-h-screen items-center justify-center bg-[#F6F7F3] p-4">
+      <div className="w-full max-w-5xl">
+        <Card className="grid overflow-hidden border-stone-200 p-0 shadow-sm md:grid-cols-[1.6fr_1fr]">
+          <img
+            src="/Farmacity_banner.jpeg"
+            alt="Farmacity"
+            className="hidden h-full w-full object-cover object-left md:block"
+          />
 
-        <Card className="border-stone-200 shadow-sm">
-          <CardContent className="pt-6">
+          <div className="p-8">
+            <div className="mb-6 flex flex-col items-center gap-2">
+              <img src="/Farmacity_logo.png" alt="Farmacity" className="h-8 w-auto" />
+              <p className="text-sm text-stone-500">Gestión de relocalización de colaboradores</p>
+            </div>
+
             <form onSubmit={handleSubmit} className="space-y-4">
               <div className="space-y-1.5">
                 <Label htmlFor="username">Usuario o legajo</Label>
@@ -122,7 +124,7 @@ export function LoginPage() {
                 ¿Olvidaste tu contraseña?
               </button>
             </form>
-          </CardContent>
+          </div>
         </Card>
 
         <p className="mt-6 text-center text-xs text-stone-400">Farmacity · People Analytics</p>

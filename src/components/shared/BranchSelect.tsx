@@ -6,14 +6,18 @@ interface BranchSelectProps {
   value: string;
   onChange: (value: string) => void;
   placeholder?: string;
+  /** Branch id to omit from the list, e.g. the collaborator's current branch when picking "sucursal deseada". */
+  excludeId?: number | null;
 }
 
 export function BranchSelect({
   value,
   onChange,
   placeholder = "Seleccioná una sucursal",
+  excludeId,
 }: BranchSelectProps) {
   const { branches, loading } = useBranches();
+  const options = excludeId != null ? branches.filter((b) => b.id !== excludeId) : branches;
 
   return (
     <Select value={value} onValueChange={onChange} disabled={loading}>
@@ -21,7 +25,7 @@ export function BranchSelect({
         <SelectValue placeholder={loading ? "Cargando sucursales..." : placeholder} />
       </SelectTrigger>
       <SelectContent>
-        {branches.map((b) => (
+        {options.map((b) => (
           <SelectItem key={b.id} value={String(b.id)}>
             {b.name} <span className="text-stone-400">— {b.region}</span>
           </SelectItem>
