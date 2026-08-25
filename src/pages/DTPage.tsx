@@ -15,8 +15,34 @@ import {
   DialogHeader,
   DialogTitle,
 } from "@/components/ui/dialog";
+import { useBranches } from "@/hooks/useBranches";
 import { ApiError, apiJson } from "@/lib/api";
 import type { NearbyEmployee } from "@/types";
+
+const EARTH_RADIUS_KM = 6371;
+
+function haversineKm(a: { lat: number; lng: number }, b: { lat: number; lng: number }) {
+  const dLat = ((b.lat - a.lat) * Math.PI) / 180;
+  const dLng = ((b.lng - a.lng) * Math.PI) / 180;
+  const lat1 = (a.lat * Math.PI) / 180;
+  const lat2 = (b.lat * Math.PI) / 180;
+  const h = Math.sin(dLat / 2) ** 2 + Math.cos(lat1) * Math.cos(lat2) * Math.sin(dLng / 2) ** 2;
+  return 2 * EARTH_RADIUS_KM * Math.asin(Math.sqrt(h));
+}
+
+// Google's directions embed auto-fits both markers with generous padding by
+// default (very zoomed out). Picking a zoom level from the actual distance
+// between the two points keeps it tight regardless of how close or far
+// apart they are — branches range from a few blocks to other provinces/countries.
+function zoomForDistanceKm(km: number) {
+  if (km < 1) return 15;
+  if (km < 2) return 14;
+  if (km < 5) return 13;
+  if (km < 10) return 12;
+  if (km < 20) return 11;
+  if (km < 50) return 10;
+  return 8;
+}
 
 export function DTPage() {
   const [branchId, setBranchId] = React.useState("");
@@ -25,6 +51,8 @@ export function DTPage() {
   const [loading, setLoading] = React.useState(false);
   const [error, setError] = React.useState<string | null>(null);
   const [selected, setSelected] = React.useState<NearbyEmployee | null>(null);
+  const { branches } = useBranches();
+  const selectedBranch = branches.find((b) => b.id === Number(branchId));
 
   const handleShow = async () => {
     if (!branchId) return;
@@ -124,7 +152,7 @@ export function DTPage() {
       )}
 
       <Dialog open={!!selected} onOpenChange={(v) => !v && setSelected(null)}>
-        <DialogContent className="sm:max-w-sm">
+        <DialogContent className="sm:max-w-lg">
           {selected && (
             <>
               <DialogHeader>
@@ -151,6 +179,23 @@ export function DTPage() {
                   </span>
                 </div>
               </div>
+              {selectedBranch?.lat != null && selectedBranch?.lng != null ? (
+                <div className="overflow-hidden rounded-md border border-stone-200">
+                  <iframe
+                    title={`Domicilio de ${selected.name} y ubicación de ${selectedBranch.name}`}
+                    className="h-80 w-full"
+                    loading="lazy"
+                    referrerPolicy="no-referrer-when-downgrade"
+                    src={`https://www.google.com/maps?saddr=${selected.lat},${selected.lng}&daddr=${selectedBranch.lat},${selectedBranch.lng}&output=embed&z=${zoomForDistanceKm(
+                      haversineKm(selected, { lat: selectedBranch.lat, lng: selectedBranch.lng }),
+                    )}`}
+                  />
+                </div>
+              ) : (
+                <p className="rounded-md border border-stone-200 bg-stone-50 px-3 py-2 text-xs text-stone-500">
+                  Sin coordenadas cargadas para esta sucursal.
+                </p>
+              )}
               <DialogFooter>
                 <Button
                   className="w-full gap-2 bg-[#1F7A4D] hover:bg-[#19653F]"

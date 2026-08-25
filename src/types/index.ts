@@ -83,6 +83,8 @@ export interface Branch {
   name: string;
   region: string;
   provincia: string;
+  lat: number | null;
+  lng: number | null;
 }
 
 export interface RequestHistoryEntry {
@@ -139,6 +141,8 @@ export interface NearbyEmployee {
   distance: string;
   email: string;
   phone: string | null;
+  lat: number;
+  lng: number;
 }
 
 export interface RegionData {
