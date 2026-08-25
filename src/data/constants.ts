@@ -28,3 +28,11 @@ export const STATUS_DOT_COLORS: Record<RequestStatus, string> = {
   "No aprobado": "bg-red-500",
   Cancelada: "bg-stone-400",
 };
+
+// Mirrors the API's OPEN_STATUSES (src/common/status.util.ts in
+// farma-te-acerca-api) — a collaborator can only self-cancel (hard-delete)
+// a request that's still open; once HC has closed it out (Finalizada/No
+// aprobado) that outcome isn't the collaborator's to erase, and DELETE
+// /requests/:id 409s. Checked here too so the cancel action doesn't even
+// show for a request already in a terminal estado.
+export const CANCELABLE_STATUSES: RequestStatus[] = ["Activa", "Aprobado", "En curso"];

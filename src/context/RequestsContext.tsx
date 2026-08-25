@@ -9,6 +9,7 @@ interface RequestsContextValue {
   loading: boolean;
   error: string | null;
   addRequest: (input: NewRequestInput) => Promise<RequestHistoryEntry>;
+  cancelRequest: (id: number) => Promise<void>;
   currentBranchId: number | null;
   currentBranch: string | null;
   currentBranchLoading: boolean;
@@ -70,9 +71,32 @@ export function RequestsProvider() {
     return entry;
   }, []);
 
+  const cancelRequest = React.useCallback(async (id: number) => {
+    await apiJson<void>(`/requests/${id}`, { method: "DELETE" });
+    setHistory((prev) => prev.filter((h) => h.id !== id));
+  }, []);
+
   const value = React.useMemo(
-    () => ({ history, loading, error, addRequest, currentBranchId, currentBranch, currentBranchLoading }),
-    [history, loading, error, addRequest, currentBranchId, currentBranch, currentBranchLoading],
+    () => ({
+      history,
+      loading,
+      error,
+      addRequest,
+      cancelRequest,
+      currentBranchId,
+      currentBranch,
+      currentBranchLoading,
+    }),
+    [
+      history,
+      loading,
+      error,
+      addRequest,
+      cancelRequest,
+      currentBranchId,
+      currentBranch,
+      currentBranchLoading,
+    ],
   );
 
   return (

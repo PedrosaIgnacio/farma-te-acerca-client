@@ -1,13 +1,21 @@
 import * as React from "react";
-import { ChevronRight, ClipboardList, Plus, Search, ShieldCheck } from "lucide-react";
+import { ChevronRight, ClipboardList, MoreVertical, Plus, Search, ShieldCheck } from "lucide-react";
 import { useLocation, useNavigate } from "react-router-dom";
 
+import { CancelRequestDialog } from "@/components/collaborator/CancelRequestDialog";
 import { EmptyState } from "@/components/shared/EmptyState";
 import { StatusBadge } from "@/components/shared/StatusBadge";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuTrigger,
+} from "@/components/ui/dropdown-menu";
 import { Input } from "@/components/ui/input";
 import { Skeleton } from "@/components/ui/skeleton";
 import { useRequests } from "@/context/RequestsContext";
+import { CANCELABLE_STATUSES } from "@/data/constants";
 import type { RequestHistoryEntry } from "@/types";
 
 export function HistoryPage() {
@@ -18,6 +26,7 @@ export function HistoryPage() {
     (location.state as { confirmation?: RequestHistoryEntry } | null)?.confirmation ?? null;
 
   const [search, setSearch] = React.useState("");
+  const [toCancel, setToCancel] = React.useState<RequestHistoryEntry | null>(null);
   const filteredHistory = React.useMemo(() => {
     const term = search.trim().toLowerCase();
     if (!term) return history;
@@ -88,6 +97,9 @@ export function HistoryPage() {
                     <th className="px-4 py-3 font-medium">Sucursal deseada</th>
                     <th className="hidden px-4 py-3 font-medium sm:table-cell">Fecha</th>
                     <th className="px-4 py-3 font-medium">Estado</th>
+                    <th className="px-4 py-3 font-medium">
+                      <span className="sr-only">Acciones</span>
+                    </th>
                   </tr>
                 </thead>
                 <tbody>
@@ -104,6 +116,9 @@ export function HistoryPage() {
                       </td>
                       <td className="px-4 py-4">
                         <Skeleton className="h-5 w-20 rounded-full" />
+                      </td>
+                      <td className="px-4 py-4">
+                        <Skeleton className="h-8 w-8 rounded-md" />
                       </td>
                     </tr>
                   ))}
@@ -133,6 +148,9 @@ export function HistoryPage() {
                     <th className="px-4 py-3 font-medium">Sucursal deseada</th>
                     <th className="hidden px-4 py-3 font-medium sm:table-cell">Fecha</th>
                     <th className="px-4 py-3 font-medium">Estado</th>
+                    <th className="px-4 py-3 font-medium">
+                      <span className="sr-only">Acciones</span>
+                    </th>
                   </tr>
                 </thead>
                 <tbody>
@@ -154,6 +172,26 @@ export function HistoryPage() {
                       <td className="px-4 py-4">
                         <StatusBadge status={h.status} />
                       </td>
+                      <td className="px-4 py-4 text-right" onClick={(e) => e.stopPropagation()}>
+                        {CANCELABLE_STATUSES.includes(h.status) && (
+                          <DropdownMenu>
+                            <DropdownMenuTrigger asChild>
+                              <button
+                                type="button"
+                                className="rounded-md p-1.5 text-stone-400 hover:bg-stone-100 hover:text-stone-600"
+                              >
+                                <MoreVertical className="h-4 w-4" />
+                                <span className="sr-only">Acciones</span>
+                              </button>
+                            </DropdownMenuTrigger>
+                            <DropdownMenuContent align="end">
+                              <DropdownMenuItem onClick={() => setToCancel(h)}>
+                                Cancelar solicitud
+                              </DropdownMenuItem>
+                            </DropdownMenuContent>
+                          </DropdownMenu>
+                        )}
+                      </td>
                     </tr>
                   ))}
                 </tbody>
@@ -162,6 +200,12 @@ export function HistoryPage() {
           )}
         </CardContent>
       </Card>
+
+      <CancelRequestDialog
+        request={toCancel}
+        onOpenChange={(open) => !open && setToCancel(null)}
+        onCancelled={() => setToCancel(null)}
+      />
     </div>
   );
 }

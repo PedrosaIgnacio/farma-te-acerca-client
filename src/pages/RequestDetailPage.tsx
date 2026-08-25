@@ -1,37 +1,65 @@
-import { ArrowLeft } from "lucide-react";
+import * as React from "react";
+import { ArrowLeft, MoreVertical } from "lucide-react";
 import { useNavigate, useParams } from "react-router-dom";
 
+import { CancelRequestDialog } from "@/components/collaborator/CancelRequestDialog";
 import { RequestTimeline } from "@/components/collaborator/RequestTimeline";
 import { StatusBadge } from "@/components/shared/StatusBadge";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuTrigger,
+} from "@/components/ui/dropdown-menu";
 import { Skeleton } from "@/components/ui/skeleton";
+import { CANCELABLE_STATUSES } from "@/data/constants";
 import { useRequestDetail } from "@/hooks/useRequestDetail";
 
 export function RequestDetailPage() {
   const { id } = useParams<{ id: string }>();
   const navigate = useNavigate();
   const { request, loading, error } = useRequestDetail(id);
+  const [cancelling, setCancelling] = React.useState(false);
 
   return (
     <div className="p-6">
       <div className="grid grid-cols-12">
         <div className="col-span-12 space-y-6 lg:col-span-8 lg:col-start-3">
-          <div className="flex items-start gap-3">
-            <Button
-              variant="outline"
-              size="icon"
-              className="shrink-0"
-              onClick={() => navigate("/colaborador")}
-            >
-              <ArrowLeft className="h-4 w-4" />
-            </Button>
-            <div>
-              <h1 className="text-xl font-semibold text-stone-800">
-                Solicitud N° {id ?? ""}
-              </h1>
-              <p className="text-sm text-stone-500">Detalle y estados por los que pasó tu solicitud.</p>
+          <div className="flex items-start justify-between gap-3">
+            <div className="flex items-start gap-3">
+              <Button
+                variant="outline"
+                size="icon"
+                className="shrink-0"
+                onClick={() => navigate("/colaborador")}
+              >
+                <ArrowLeft className="h-4 w-4" />
+              </Button>
+              <div>
+                <h1 className="text-xl font-semibold text-stone-800">
+                  Solicitud N° {id ?? ""}
+                </h1>
+                <p className="text-sm text-stone-500">Detalle y estados por los que pasó tu solicitud.</p>
+              </div>
             </div>
+
+            {request && CANCELABLE_STATUSES.includes(request.status) && (
+              <DropdownMenu>
+                <DropdownMenuTrigger asChild>
+                  <Button variant="outline" size="icon" className="shrink-0">
+                    <MoreVertical className="h-4 w-4" />
+                    <span className="sr-only">Acciones</span>
+                  </Button>
+                </DropdownMenuTrigger>
+                <DropdownMenuContent align="end">
+                  <DropdownMenuItem onClick={() => setCancelling(true)}>
+                    Cancelar solicitud
+                  </DropdownMenuItem>
+                </DropdownMenuContent>
+              </DropdownMenu>
+            )}
           </div>
 
           {loading ? (
@@ -132,6 +160,12 @@ export function RequestDetailPage() {
           ) : null}
         </div>
       </div>
+
+      <CancelRequestDialog
+        request={cancelling && request ? { id: request.id, branch: request.desiredBranch } : null}
+        onOpenChange={(open) => !open && setCancelling(false)}
+        onCancelled={() => navigate("/colaborador")}
+      />
     </div>
   );
 }
