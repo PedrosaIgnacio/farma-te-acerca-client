@@ -3,6 +3,7 @@ import { BrowserRouter, Navigate, Route, Routes } from "react-router-dom";
 import { AuthProvider } from "@/context/AuthContext";
 import { RequestsProvider } from "@/context/RequestsContext";
 import { AnalyticsPage } from "@/pages/AnalyticsPage";
+import { ColaboradoresPage } from "@/pages/ColaboradoresPage";
 import { DTPage } from "@/pages/DTPage";
 import { HcNewRequestPage } from "@/pages/HcNewRequestPage";
 import { HistoryPage } from "@/pages/HistoryPage";
@@ -10,6 +11,7 @@ import { LoginPage } from "@/pages/LoginPage";
 import { NewRequestPage } from "@/pages/NewRequestPage";
 import { RequestDetailPage } from "@/pages/RequestDetailPage";
 import { SolicitudesPage } from "@/pages/SolicitudesPage";
+import { SucursalesPage } from "@/pages/SucursalesPage";
 import { RequireAuth, RequireRole, RootRedirect } from "@/routes/guards";
 
 function App() {
@@ -35,6 +37,8 @@ function App() {
               <Route path="/capital-humano/solicitudes" element={<SolicitudesPage />} />
               <Route path="/capital-humano/solicitudes/nueva" element={<HcNewRequestPage />} />
               <Route path="/capital-humano/analytics" element={<AnalyticsPage />} />
+              <Route path="/capital-humano/sucursales" element={<SucursalesPage />} />
+              <Route path="/capital-humano/colaboradores" element={<ColaboradoresPage />} />
             </Route>
 
             <Route element={<RequireRole allow={["dt"]} />}>

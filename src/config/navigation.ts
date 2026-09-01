@@ -1,4 +1,4 @@
-import { BarChart3, ClipboardList, Users, type LucideIcon } from "lucide-react";
+import { BarChart3, Building2, ClipboardList, UserCog, Users, type LucideIcon } from "lucide-react";
 
 import type { Role } from "@/types";
 
@@ -25,6 +25,8 @@ export const NAV: Record<Role, NavItem[]> = {
   hc: [
     { path: "/capital-humano/solicitudes", label: "Solicitudes", icon: ClipboardList },
     { path: "/capital-humano/analytics", label: "Analytics", icon: BarChart3 },
+    { path: "/capital-humano/sucursales", label: "Sucursales", icon: Building2 },
+    { path: "/capital-humano/colaboradores", label: "Colaboradores", icon: UserCog },
   ],
   dt: [{ path: ROLE_HOME.dt, label: "Colaboradores cercanos", icon: Users }],
 };

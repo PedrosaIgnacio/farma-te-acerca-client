@@ -97,8 +97,31 @@ export interface Branch {
   name: string;
   region: string;
   provincia: string;
+  provinciaId: number;
+  activa: boolean;
   lat: number | null;
   lng: number | null;
+}
+
+export interface Provincia {
+  id: number;
+  nombre: string;
+  region: { id: number; nombre: string };
+}
+
+export interface CreateSucursalInput {
+  nombre: string;
+  provinciaId: number;
+  lat?: number;
+  lng?: number;
+}
+
+export interface UpdateSucursalInput {
+  nombre?: string;
+  provinciaId?: number;
+  lat?: number;
+  lng?: number;
+  activa?: boolean;
 }
 
 export interface RequestHistoryEntry {
@@ -155,6 +178,46 @@ export interface HcCollaborator {
   name: string;
   currentBranchId: number | null;
   currentBranch: string | null;
+}
+
+// Backs the Colaboradores ABM (GET/POST/PATCH /hc/users) — spans all 3
+// roles and both active/inactive, unlike the narrower `HcCollaborator`
+// above (which stays scoped to active `collaborator`-role people for the
+// "solicitar en nombre de" select).
+export interface HcUser {
+  id: string;
+  legajo: string;
+  nombre: string;
+  email: string;
+  telefono: string | null;
+  rol: Role;
+  activo: boolean;
+  currentBranchId: number | null;
+  currentBranch: string | null;
+}
+
+export interface CreateHcUserInput {
+  legajo: string;
+  nombre: string;
+  email: string;
+  telefono?: string;
+  rol: Role;
+  sucursalId?: number;
+}
+
+export interface UpdateHcUserInput {
+  nombre?: string;
+  email?: string;
+  telefono?: string;
+  rol?: Role;
+  sucursalId?: number;
+  activo?: boolean;
+}
+
+// One-time reveal — `temporaryPassword` is never returned again after this
+// response, so the create dialog must show it to HC before closing.
+export interface CreateHcUserResponse extends HcUser {
+  temporaryPassword: string;
 }
 
 export interface NearbyEmployee {

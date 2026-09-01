@@ -9,6 +9,7 @@ import {
   SheetHeader,
   SheetTitle,
 } from "@/components/ui/sheet";
+import { ALLOWED_STATUS_TRANSITIONS } from "@/data/constants";
 import type { HCRequest } from "@/types";
 
 interface RequestDetailSheetProps {
@@ -59,9 +60,11 @@ export function RequestDetailSheet({ request, onOpenChange, onChangeStatus }: Re
               >
                 <Mail className="h-4 w-4" /> Contactar
               </Button>
-              <Button variant="outline" className="w-full" onClick={() => onChangeStatus(request)}>
-                Cambiar estado
-              </Button>
+              {ALLOWED_STATUS_TRANSITIONS[request.statusCode].length > 0 && (
+                <Button variant="outline" className="w-full" onClick={() => onChangeStatus(request)}>
+                  Cambiar estado
+                </Button>
+              )}
             </div>
           </>
         )}

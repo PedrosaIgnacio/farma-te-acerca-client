@@ -17,6 +17,7 @@ import {
   DropdownMenuItem,
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
+import { ALLOWED_STATUS_TRANSITIONS } from "@/data/constants";
 import { useHcRequests } from "@/hooks/useHcRequests";
 import type { HCRequest } from "@/types";
 
@@ -180,19 +181,21 @@ export function SolicitudesTab() {
                         <StatusBadge status={r.status} code={r.statusCode} />
                       </td>
                       <td className="hidden px-4 py-4 text-right sm:table-cell">
-                        <DropdownMenu>
-                          <DropdownMenuTrigger asChild>
-                            <Button variant="ghost" size="icon" onClick={(e) => e.stopPropagation()}>
-                              <MoreVertical className="h-4 w-4" />
-                              <span className="sr-only">Acciones</span>
-                            </Button>
-                          </DropdownMenuTrigger>
-                          <DropdownMenuContent align="end" onClick={(e) => e.stopPropagation()}>
-                            <DropdownMenuItem onClick={() => setStatusTarget(r)}>
-                              Cambiar estado
-                            </DropdownMenuItem>
-                          </DropdownMenuContent>
-                        </DropdownMenu>
+                        {ALLOWED_STATUS_TRANSITIONS[r.statusCode].length > 0 && (
+                          <DropdownMenu>
+                            <DropdownMenuTrigger asChild>
+                              <Button variant="ghost" size="icon" onClick={(e) => e.stopPropagation()}>
+                                <MoreVertical className="h-4 w-4" />
+                                <span className="sr-only">Acciones</span>
+                              </Button>
+                            </DropdownMenuTrigger>
+                            <DropdownMenuContent align="end" onClick={(e) => e.stopPropagation()}>
+                              <DropdownMenuItem onClick={() => setStatusTarget(r)}>
+                                Cambiar estado
+                              </DropdownMenuItem>
+                            </DropdownMenuContent>
+                          </DropdownMenu>
+                        )}
                       </td>
                     </tr>
                   ))}
