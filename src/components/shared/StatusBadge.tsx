@@ -1,10 +1,10 @@
 import { Badge } from "@/components/ui/badge";
 import { STATUS_STYLES } from "@/data/constants";
-import type { RequestStatus } from "@/types";
+import type { EstadoCodigo, RequestStatus } from "@/types";
 
-export function StatusBadge({ status }: { status: RequestStatus }) {
+export function StatusBadge({ status, code }: { status: RequestStatus; code: EstadoCodigo }) {
   return (
-    <Badge variant="outline" className={`${STATUS_STYLES[status]} font-medium`}>
+    <Badge variant="outline" className={`${STATUS_STYLES[code]} font-medium`}>
       {status}
     </Badge>
   );

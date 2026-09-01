@@ -21,7 +21,7 @@ export function RequestTimeline({ history }: RequestTimelineProps) {
             )}
             <span
               aria-hidden
-              className={`relative z-10 mt-1 h-4 w-4 shrink-0 rounded-full border-2 border-white shadow ${STATUS_DOT_COLORS[entry.status]} ${
+              className={`relative z-10 mt-1 h-4 w-4 shrink-0 rounded-full border-2 border-white shadow ${STATUS_DOT_COLORS[entry.statusCode]} ${
                 isCurrent ? "ring-4 ring-[#1F7A4D]/20" : ""
               }`}
             />

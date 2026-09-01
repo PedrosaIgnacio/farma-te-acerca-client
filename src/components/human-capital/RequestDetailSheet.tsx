@@ -46,7 +46,7 @@ export function RequestDetailSheet({ request, onOpenChange, onChangeStatus }: Re
               </div>
               <div className="flex flex-col gap-1 border-b border-stone-100 pb-2">
                 <span className="text-xs text-stone-500">Estado</span>
-                <StatusBadge status={request.status} />
+                <StatusBadge status={request.status} code={request.statusCode} />
               </div>
             </div>
 

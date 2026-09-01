@@ -177,7 +177,7 @@ export function SolicitudesTab() {
                       </td>
                       <td className="whitespace-nowrap px-4 py-4 text-stone-600">{r.date}</td>
                       <td className="hidden px-4 py-4 sm:table-cell">
-                        <StatusBadge status={r.status} />
+                        <StatusBadge status={r.status} code={r.statusCode} />
                       </td>
                       <td className="hidden px-4 py-4 text-right sm:table-cell">
                         <DropdownMenu>

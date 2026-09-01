@@ -10,6 +10,20 @@ export type RequestStatus =
   | "No aprobado"
   | "Cancelada";
 
+// Stable business key backing an estado (mirrors the API's EstadoCodigo in
+// farma-te-acerca-api/src/common/status.util.ts) — everything that reasons
+// about the estado (allowed transitions, badge/dot colors, whether a
+// request is still cancelable) keys off this, never off `RequestStatus`
+// (the renamable Spanish display label). Renaming an estado's `nombre` in
+// the DB must never break that logic.
+export type EstadoCodigo =
+  | "ACTIVA"
+  | "EN_CURSO"
+  | "APROBADO"
+  | "NO_APROBADO"
+  | "FINALIZADA"
+  | "CANCELADA";
+
 export interface Session {
   user: string;
   role: Role;
@@ -47,7 +61,7 @@ export interface NewRequestInput {
 }
 
 export interface UpdateRequestStatusInput {
-  status: RequestStatus;
+  codigo: EstadoCodigo;
   motivo: string;
 }
 
@@ -92,10 +106,12 @@ export interface RequestHistoryEntry {
   branch: string;
   date: string;
   status: RequestStatus;
+  statusCode: EstadoCodigo;
 }
 
 export interface RequestStatusHistoryEntry {
   status: RequestStatus;
+  statusCode: EstadoCodigo;
   startDate: string;
   endDate: string | null;
   motivo: string | null;
@@ -110,6 +126,7 @@ export interface RequestDetail {
   description: string | null;
   date: string;
   status: RequestStatus;
+  statusCode: EstadoCodigo;
   history: RequestStatusHistoryEntry[];
 }
 
@@ -122,7 +139,14 @@ export interface HCRequest {
   reason: Reason;
   date: string;
   status: RequestStatus;
+  statusCode: EstadoCodigo;
   email: string;
+}
+
+export interface Estado {
+  codigo: EstadoCodigo;
+  nombre: RequestStatus;
+  color: string;
 }
 
 export interface HcCollaborator {

@@ -45,7 +45,7 @@ export function RequestDetailPage() {
               </div>
             </div>
 
-            {request && CANCELABLE_STATUSES.includes(request.status) && (
+            {request && CANCELABLE_STATUSES.includes(request.statusCode) && (
               <DropdownMenu>
                 <DropdownMenuTrigger asChild>
                   <Button variant="outline" size="icon" className="shrink-0">
@@ -143,7 +143,7 @@ export function RequestDetailPage() {
                   </div>
                   <div className="flex flex-col gap-1">
                     <span className="text-xs text-stone-500">Estado actual</span>
-                    <StatusBadge status={request.status} />
+                    <StatusBadge status={request.status} code={request.statusCode} />
                   </div>
                 </CardContent>
               </Card>

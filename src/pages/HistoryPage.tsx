@@ -170,10 +170,10 @@ export function HistoryPage() {
                         {h.date}
                       </td>
                       <td className="px-4 py-4">
-                        <StatusBadge status={h.status} />
+                        <StatusBadge status={h.status} code={h.statusCode} />
                       </td>
                       <td className="px-4 py-4 text-right" onClick={(e) => e.stopPropagation()}>
-                        {CANCELABLE_STATUSES.includes(h.status) && (
+                        {CANCELABLE_STATUSES.includes(h.statusCode) && (
                           <DropdownMenu>
                             <DropdownMenuTrigger asChild>
                               <button
@@ -186,7 +186,7 @@ export function HistoryPage() {
                             </DropdownMenuTrigger>
                             <DropdownMenuContent align="end">
                               <DropdownMenuItem onClick={() => setToCancel(h)}>
-                                Cancelar solicitud
+                                Eliminar solicitud
                               </DropdownMenuItem>
                             </DropdownMenuContent>
                           </DropdownMenu>
