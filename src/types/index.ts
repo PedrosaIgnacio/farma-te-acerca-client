@@ -90,6 +90,7 @@ export interface AnalyticsResponse {
   kpis: AnalyticsKpis;
   regionData: RegionData[];
   statusData: StatusData[];
+  puestoData: PuestoData[];
 }
 
 export interface Branch {
@@ -241,4 +242,9 @@ export interface StatusData {
   name: RequestStatus;
   value: number;
   color: string;
+}
+
+export interface PuestoData {
+  puesto: string;
+  requests: number;
 }

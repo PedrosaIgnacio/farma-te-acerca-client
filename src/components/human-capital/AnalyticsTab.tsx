@@ -116,6 +116,33 @@ export function AnalyticsTab({ filters }: AnalyticsTabProps) {
           </CardContent>
         </Card>
 
+        <Card className="lg:col-span-2">
+          <CardHeader>
+            <CardTitle className="text-sm">Solicitudes por puesto</CardTitle>
+          </CardHeader>
+          <CardContent className="h-72">
+            {loading ? (
+              <Skeleton className="h-full w-full" />
+            ) : (
+              <ResponsiveContainer width="100%" height="100%">
+                <BarChart data={analytics?.puestoData ?? []} layout="vertical" margin={{ left: 24 }}>
+                  <CartesianGrid strokeDasharray="3 3" stroke="#EEEDE9" />
+                  <XAxis type="number" tick={{ fontSize: 11 }} allowDecimals={false} />
+                  <YAxis type="category" dataKey="puesto" tick={{ fontSize: 11 }} width={160} />
+                  <Tooltip />
+                  <Bar
+                    dataKey="requests"
+                    name="Solicitudes"
+                    fill="#1F7A4D"
+                    radius={[0, 4, 4, 0]}
+                    maxBarSize={24}
+                  />
+                </BarChart>
+              </ResponsiveContainer>
+            )}
+          </CardContent>
+        </Card>
+
         <Card>
           <CardHeader>
             <CardTitle className="text-sm">Distribución por estado</CardTitle>
