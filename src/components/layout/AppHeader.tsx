@@ -1,4 +1,4 @@
-import { LogOut } from "lucide-react";
+import { LogOut, Menu } from "lucide-react";
 
 import { Button } from "@/components/ui/button";
 import { ROLE_LABEL } from "@/config/navigation";
@@ -8,12 +8,22 @@ interface AppHeaderProps {
   user: string;
   role: Role;
   onLogout: () => void;
+  onMenuClick: () => void;
 }
 
-export function AppHeader({ user, role, onLogout }: AppHeaderProps) {
+export function AppHeader({ user, role, onLogout, onMenuClick }: AppHeaderProps) {
   return (
     <header className="sticky top-0 z-10 flex items-center justify-between border-b border-stone-200 bg-white/90 px-6 py-3 backdrop-blur">
       <div className="flex items-center gap-2">
+        <Button
+          variant="ghost"
+          size="icon"
+          className="-ml-2 sm:hidden"
+          onClick={onMenuClick}
+          title="Abrir menú"
+        >
+          <Menu className="h-5 w-5" />
+        </Button>
         <img
           src="/Farmacity_icon_only.jpeg"
           alt="Farmacity"

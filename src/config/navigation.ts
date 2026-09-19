@@ -14,7 +14,7 @@ export const ROLE_HOME: Record<Role, string> = {
   dt: "/dt",
 };
 
-interface NavItem {
+export interface NavItem {
   path: string;
   label: string;
   icon: LucideIcon;

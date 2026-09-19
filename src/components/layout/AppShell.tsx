@@ -1,12 +1,16 @@
-import { NavLink, Outlet, useNavigate } from "react-router-dom";
+import * as React from "react";
+import { Outlet, useNavigate } from "react-router-dom";
 
 import { AppHeader } from "@/components/layout/AppHeader";
-import { NAV } from "@/config/navigation";
+import { SidebarNav } from "@/components/layout/SidebarNav";
+import { Sheet, SheetContent, SheetHeader, SheetTitle } from "@/components/ui/sheet";
+import { NAV, ROLE_LABEL } from "@/config/navigation";
 import { useAuth } from "@/context/AuthContext";
 
 export function AppShell() {
   const { session, logout } = useAuth();
   const navigate = useNavigate();
+  const [mobileNavOpen, setMobileNavOpen] = React.useState(false);
 
   if (!session) return null;
 
@@ -19,33 +23,29 @@ export function AppShell() {
 
   return (
     <div className="fixed inset-0 flex flex-col overflow-hidden bg-[#F6F7F3]">
-      <AppHeader user={session.user} role={session.role} onLogout={handleLogout} />
+      <AppHeader
+        user={session.user}
+        role={session.role}
+        onLogout={handleLogout}
+        onMenuClick={() => setMobileNavOpen(true)}
+      />
       <div className="flex flex-1 overflow-hidden">
         <aside className="hidden w-56 shrink-0 overflow-y-auto border-r border-stone-200 bg-white p-4 sm:block">
-          <nav className="space-y-1">
-            {nav.map((item) => (
-              <NavLink
-                key={item.path}
-                to={item.path}
-                end
-                className={({ isActive }) =>
-                  `flex items-center gap-2 rounded-md px-3 py-2 text-sm font-medium transition-colors ${
-                    isActive
-                      ? "bg-[#1F7A4D]/10 text-[#1F7A4D]"
-                      : "text-stone-600 hover:bg-stone-50"
-                  }`
-                }
-              >
-                <item.icon className="h-4 w-4" />
-                {item.label}
-              </NavLink>
-            ))}
-          </nav>
+          <SidebarNav nav={nav} />
         </aside>
         <main className="flex-1 overflow-y-auto">
           <Outlet />
         </main>
       </div>
+
+      <Sheet open={mobileNavOpen} onOpenChange={setMobileNavOpen}>
+        <SheetContent side="left" className="w-64 p-4">
+          <SheetHeader className="mb-2">
+            <SheetTitle>{ROLE_LABEL[session.role]}</SheetTitle>
+          </SheetHeader>
+          <SidebarNav nav={nav} onNavigate={() => setMobileNavOpen(false)} />
+        </SheetContent>
+      </Sheet>
     </div>
   );
 }
