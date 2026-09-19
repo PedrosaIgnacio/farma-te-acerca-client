@@ -11,6 +11,7 @@ import {
 } from "@/components/ui/dialog";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
+import { toast } from "@/hooks/use-toast";
 import { ApiError, apiJson } from "@/lib/api";
 
 const STEPS = ["Email", "Código", "Nueva contraseña"];
@@ -27,7 +28,6 @@ export function ForgotPasswordDialog({ open, onOpenChange }: ForgotPasswordDialo
   const [newPass, setNewPass] = React.useState("");
   const [confirmPass, setConfirmPass] = React.useState("");
   const [submitting, setSubmitting] = React.useState(false);
-  const [error, setError] = React.useState("");
   const [notice, setNotice] = React.useState("");
 
   const reset = () => {
@@ -36,7 +36,6 @@ export function ForgotPasswordDialog({ open, onOpenChange }: ForgotPasswordDialo
     setCode("");
     setNewPass("");
     setConfirmPass("");
-    setError("");
     setNotice("");
   };
 
@@ -54,30 +53,34 @@ export function ForgotPasswordDialog({ open, onOpenChange }: ForgotPasswordDialo
 
   const handleStep1 = async () => {
     if (!email) {
-      setError("Ingresá tu email corporativo.");
+      toast({ description: "Ingresá tu email corporativo.", variant: "destructive" });
       return;
     }
-    setError("");
     setSubmitting(true);
     try {
       await requestCode();
       setStep(2);
     } catch (err) {
-      setError(err instanceof ApiError ? err.message : "No se pudo enviar el código.");
+      toast({
+        description: err instanceof ApiError ? err.message : "No se pudo enviar el código.",
+        variant: "destructive",
+      });
     } finally {
       setSubmitting(false);
     }
   };
 
   const handleResend = async () => {
-    setError("");
     setNotice("");
     setSubmitting(true);
     try {
       await requestCode();
       setNotice("Código reenviado.");
     } catch (err) {
-      setError(err instanceof ApiError ? err.message : "No se pudo reenviar el código.");
+      toast({
+        description: err instanceof ApiError ? err.message : "No se pudo reenviar el código.",
+        variant: "destructive",
+      });
     } finally {
       setSubmitting(false);
     }
@@ -85,19 +88,17 @@ export function ForgotPasswordDialog({ open, onOpenChange }: ForgotPasswordDialo
 
   const handleStep2 = () => {
     if (!code) {
-      setError("Ingresá el código que recibiste.");
+      toast({ description: "Ingresá el código que recibiste.", variant: "destructive" });
       return;
     }
-    setError("");
     setStep(3);
   };
 
   const handleReset = async () => {
     if (!newPass || newPass !== confirmPass) {
-      setError("Las contraseñas no coinciden.");
+      toast({ description: "Las contraseñas no coinciden.", variant: "destructive" });
       return;
     }
-    setError("");
     setSubmitting(true);
     try {
       await apiJson("/auth/reset-password", {
@@ -106,7 +107,10 @@ export function ForgotPasswordDialog({ open, onOpenChange }: ForgotPasswordDialo
       });
       handleClose(false);
     } catch (err) {
-      setError(err instanceof ApiError ? err.message : "No se pudo restablecer la contraseña.");
+      toast({
+        description: err instanceof ApiError ? err.message : "No se pudo restablecer la contraseña.",
+        variant: "destructive",
+      });
     } finally {
       setSubmitting(false);
     }
@@ -185,12 +189,6 @@ export function ForgotPasswordDialog({ open, onOpenChange }: ForgotPasswordDialo
               onChange={(e) => setConfirmPass(e.target.value)}
             />
           </div>
-        )}
-
-        {error && (
-          <p className="rounded-md border border-red-100 bg-red-50 px-3 py-2 text-sm text-red-600">
-            {error}
-          </p>
         )}
 
         <DialogFooter>

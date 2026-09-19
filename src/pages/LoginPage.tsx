@@ -8,6 +8,7 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { ROLE_HOME } from "@/config/navigation";
 import { useAuth } from "@/context/AuthContext";
+import { toast } from "@/hooks/use-toast";
 import { ApiError } from "@/lib/api";
 
 export function LoginPage() {
@@ -16,7 +17,6 @@ export function LoginPage() {
 
   const [username, setUsername] = React.useState("");
   const [pass, setPass] = React.useState("");
-  const [error, setError] = React.useState("");
   const [submitting, setSubmitting] = React.useState(false);
   const [forgotOpen, setForgotOpen] = React.useState(false);
 
@@ -27,16 +27,18 @@ export function LoginPage() {
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!username || !pass) {
-      setError("Ingresá tu usuario y contraseña.");
+      toast({ description: "Ingresá tu usuario y contraseña.", variant: "destructive" });
       return;
     }
-    setError("");
     setSubmitting(true);
     try {
       const next = await login(username, pass);
       navigate(ROLE_HOME[next.role], { replace: true });
     } catch (err) {
-      setError(err instanceof ApiError ? err.message : "No se pudo iniciar sesión.");
+      toast({
+        description: err instanceof ApiError ? err.message : "No se pudo iniciar sesión.",
+        variant: "destructive",
+      });
     } finally {
       setSubmitting(false);
     }
@@ -79,12 +81,6 @@ export function LoginPage() {
                 />
               </div>
 
-              {error && (
-                <p className="rounded-md border border-red-100 bg-red-50 px-3 py-2 text-sm text-red-600">
-                  {error}
-                </p>
-              )}
-
               <Button
                 type="submit"
                 disabled={submitting}
@@ -104,7 +100,7 @@ export function LoginPage() {
                 variant="outline"
                 className="w-full gap-2"
                 onClick={() =>
-                  setError("Inicio de sesión con Microsoft 365 no disponible todavía.")
+                  toast({ description: "Inicio de sesión con Microsoft 365 no disponible todavía." })
                 }
               >
                 <svg width="16" height="16" viewBox="0 0 23 23">

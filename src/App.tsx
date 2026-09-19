@@ -1,5 +1,6 @@
 import { BrowserRouter, Navigate, Route, Routes } from "react-router-dom";
 
+import { Toaster } from "@/components/ui/toaster";
 import { AuthProvider } from "@/context/AuthContext";
 import { RequestsProvider } from "@/context/RequestsContext";
 import { AnalyticsPage } from "@/pages/AnalyticsPage";
@@ -49,6 +50,7 @@ function App() {
           <Route path="*" element={<Navigate to="/" replace />} />
         </Routes>
       </BrowserRouter>
+      <Toaster />
     </AuthProvider>
   );
 }
