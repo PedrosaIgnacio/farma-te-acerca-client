@@ -4,8 +4,11 @@ import { FilterDrawer } from "@/components/shared/FilterDrawer";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group";
+import { Separator } from "@/components/ui/separator";
+import { Skeleton } from "@/components/ui/skeleton";
+import { useHcProvincias } from "@/hooks/useHcProvincias";
 
-import type { AnalyticsDateFilter } from "@/hooks/useHcAnalytics";
+import type { AnalyticsFilters } from "@/types";
 
 type PeriodOption = "hoy" | "ayer" | "7" | "15" | "30" | "otro";
 
@@ -29,7 +32,7 @@ function computeDateRange(
   period: PeriodOption,
   customFrom: string,
   customTo: string,
-): AnalyticsDateFilter | null {
+): { from: string; to: string } | null {
   const today = new Date();
   today.setHours(0, 0, 0, 0);
 
@@ -61,7 +64,7 @@ function computeDateRange(
 interface AnalyticsFilterDrawerProps {
   open: boolean;
   onOpenChange: (open: boolean) => void;
-  onApply: (filter: AnalyticsDateFilter) => void;
+  onApply: (filter: AnalyticsFilters) => void;
   onClear: () => void;
 }
 
@@ -74,12 +77,18 @@ export function AnalyticsFilterDrawer({
   const [period, setPeriod] = React.useState<PeriodOption | null>(null);
   const [customFrom, setCustomFrom] = React.useState("");
   const [customTo, setCustomTo] = React.useState("");
+  const [region, setRegion] = React.useState<string | null>(null);
+
+  const { provincias, loading: regionsLoading } = useHcProvincias();
+  const regions = React.useMemo(
+    () => [...new Set(provincias.map((p) => p.region.nombre))].sort((a, b) => a.localeCompare(b)),
+    [provincias],
+  );
 
   const handleApply = () => {
-    if (!period) return;
-    const range = computeDateRange(period, customFrom, customTo);
-    if (!range) return;
-    onApply(range);
+    const range = period ? computeDateRange(period, customFrom, customTo) : null;
+    if (period && !range) return;
+    onApply({ ...range, region: region ?? undefined });
     onOpenChange(false);
   };
 
@@ -87,6 +96,7 @@ export function AnalyticsFilterDrawer({
     setPeriod(null);
     setCustomFrom("");
     setCustomTo("");
+    setRegion(null);
     onClear();
     onOpenChange(false);
   };
@@ -97,8 +107,41 @@ export function AnalyticsFilterDrawer({
       onOpenChange={onOpenChange}
       onApply={handleApply}
       onClear={handleClear}
-      applyDisabled={!period || (period === "otro" && (!customFrom || !customTo))}
+      applyDisabled={
+        (!period && !region) || (period === "otro" && (!customFrom || !customTo))
+      }
     >
+      <div className="flex flex-col gap-4">
+        <Label className="text-sm font-medium text-stone-700">Filtrar por región</Label>
+        {regionsLoading ? (
+          <div className="flex flex-col gap-4">
+            {Array.from({ length: 5 }, (_, i) => (
+              <div key={i} className="flex items-center gap-2">
+                <Skeleton className="h-4 w-4 rounded-full" />
+                <Skeleton className="h-4 w-32" />
+              </div>
+            ))}
+          </div>
+        ) : (
+          <RadioGroup
+            className="gap-4"
+            value={region ?? undefined}
+            onValueChange={(v) => setRegion(v)}
+          >
+            {regions.map((r) => (
+              <div key={r} className="flex items-center gap-2">
+                <RadioGroupItem value={r} id={`region-${r}`} />
+                <Label htmlFor={`region-${r}`} className="font-normal">
+                  {r}
+                </Label>
+              </div>
+            ))}
+          </RadioGroup>
+        )}
+      </div>
+
+      <Separator className="my-4" />
+
       <div className="flex flex-col gap-4">
         <Label className="text-sm font-medium text-stone-700">Filtrar por período</Label>
         <RadioGroup

@@ -5,13 +5,13 @@ import { AnalyticsFilterDrawer } from "@/components/human-capital/AnalyticsFilte
 import { AnalyticsTab } from "@/components/human-capital/AnalyticsTab";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
-import type { AnalyticsDateFilter } from "@/hooks/useHcAnalytics";
+import type { AnalyticsFilters } from "@/types";
 
 export function AnalyticsPage() {
   const [filterOpen, setFilterOpen] = React.useState(false);
-  const [dateFilter, setDateFilter] = React.useState<AnalyticsDateFilter | null>(null);
+  const [filters, setFilters] = React.useState<AnalyticsFilters | null>(null);
 
-  const activeFilterCount = dateFilter ? 1 : 0;
+  const activeFilterCount = (filters?.from ? 1 : 0) + (filters?.region ? 1 : 0);
 
   return (
     <div className="space-y-6 p-6">
@@ -35,13 +35,13 @@ export function AnalyticsPage() {
         </div>
       </div>
 
-      <AnalyticsTab dateFilter={dateFilter} />
+      <AnalyticsTab filters={filters} />
 
       <AnalyticsFilterDrawer
         open={filterOpen}
         onOpenChange={setFilterOpen}
-        onApply={setDateFilter}
-        onClear={() => setDateFilter(null)}
+        onApply={setFilters}
+        onClear={() => setFilters(null)}
       />
     </div>
   );

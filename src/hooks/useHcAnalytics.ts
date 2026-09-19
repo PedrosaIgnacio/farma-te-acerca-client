@@ -1,21 +1,17 @@
 import * as React from "react";
 
 import { ApiError, apiJson } from "@/lib/api";
-import type { AnalyticsResponse } from "@/types";
+import type { AnalyticsFilters, AnalyticsResponse } from "@/types";
 
-export interface AnalyticsDateFilter {
-  from: string;
-  to: string;
-}
-
-export function useHcAnalytics(dateFilter: AnalyticsDateFilter | null) {
+export function useHcAnalytics(filters: AnalyticsFilters | null) {
   const params = React.useMemo(() => {
-    if (!dateFilter) return "";
+    if (!filters) return "";
     const p = new URLSearchParams();
-    p.set("from", dateFilter.from);
-    p.set("to", dateFilter.to);
+    if (filters.from) p.set("from", filters.from);
+    if (filters.to) p.set("to", filters.to);
+    if (filters.region) p.set("region", filters.region);
     return p.toString();
-  }, [dateFilter]);
+  }, [filters]);
 
   const [analytics, setAnalytics] = React.useState<AnalyticsResponse | null>(null);
   const [loading, setLoading] = React.useState(true);

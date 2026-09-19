@@ -17,15 +17,16 @@ import {
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Skeleton } from "@/components/ui/skeleton";
-import { useHcAnalytics, type AnalyticsDateFilter } from "@/hooks/useHcAnalytics";
+import { useHcAnalytics } from "@/hooks/useHcAnalytics";
 import { ApiError, apiBlob } from "@/lib/api";
+import type { AnalyticsFilters } from "@/types";
 
 interface AnalyticsTabProps {
-  dateFilter: AnalyticsDateFilter | null;
+  filters: AnalyticsFilters | null;
 }
 
-export function AnalyticsTab({ dateFilter }: AnalyticsTabProps) {
-  const { analytics, loading, error, params } = useHcAnalytics(dateFilter);
+export function AnalyticsTab({ filters }: AnalyticsTabProps) {
+  const { analytics, loading, error, params } = useHcAnalytics(filters);
 
   const [exporting, setExporting] = React.useState(false);
   const [exportError, setExportError] = React.useState<string | null>(null);
@@ -102,7 +103,13 @@ export function AnalyticsTab({ dateFilter }: AnalyticsTabProps) {
                   <XAxis dataKey="region" tick={{ fontSize: 11 }} />
                   <YAxis tick={{ fontSize: 11 }} />
                   <Tooltip />
-                  <Bar dataKey="requests" name="Solicitudes" fill="#1F7A4D" radius={[4, 4, 0, 0]} />
+                  <Bar
+                    dataKey="requests"
+                    name="Solicitudes"
+                    fill="#1F7A4D"
+                    radius={[4, 4, 0, 0]}
+                    maxBarSize={160}
+                  />
                 </BarChart>
               </ResponsiveContainer>
             )}
