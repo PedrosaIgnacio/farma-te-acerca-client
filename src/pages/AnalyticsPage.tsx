@@ -17,7 +17,7 @@ export function AnalyticsPage() {
     <div className="space-y-6 p-6">
       <div className="flex items-start justify-between gap-4">
         <div>
-          <h1 className="text-2xl font-bold text-stone-800">Analytics</h1>
+          <h1 className="text-2xl font-bold text-stone-800">Analíticas</h1>
           <p className="text-sm text-stone-500">
             Indicadores y tendencias de las solicitudes de relocalización.
           </p>

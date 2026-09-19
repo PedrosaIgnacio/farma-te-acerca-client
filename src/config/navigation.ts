@@ -24,7 +24,7 @@ export const NAV: Record<Role, NavItem[]> = {
   collaborator: [{ path: ROLE_HOME.collaborator, label: "Mis solicitudes", icon: ClipboardList }],
   hc: [
     { path: "/capital-humano/solicitudes", label: "Solicitudes", icon: ClipboardList },
-    { path: "/capital-humano/analytics", label: "Analytics", icon: BarChart3 },
+    { path: "/capital-humano/analytics", label: "Analíticas", icon: BarChart3 },
     { path: "/capital-humano/sucursales", label: "Sucursales", icon: Building2 },
     { path: "/capital-humano/colaboradores", label: "Colaboradores", icon: UserCog },
   ],
